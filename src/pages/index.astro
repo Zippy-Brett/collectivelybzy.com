@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Card from '../components/Card.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { getApps, getGames, getProjects } from '../lib/sanity';
+
+const [apps, games, projects] = await Promise.all([getApps(), getGames(), getProjects()]);
+---
+
+<BaseLayout>
+  <section class="hero">
+    <div class="container hero-copy">
+      <div class="kicker"><span class="script">A creative studio</span> for curious people</div>
+      <h1>Make room for a little more wonder.</h1>
+      <p class="lede">Collectively Bzy is a home for apps, games, music, and small experiments with a point of view.</p>
+      <div class="hero-actions">
+        <a class="button" href="/apps/">Explore the studio</a>
+        <a class="button secondary" href="/games/">Take the playful route</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div><div class="eyebrow">Studio work</div><h2>Useful, with a little soul.</h2></div>
+        <p>Apps and projects that aim to feel calm, clear, and worth returning to.</p>
+      </div>
+      <div class="grid two">
+        {apps.map((item) => <Card item={item} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark">
+    <div class="container">
+      <div class="section-head">
+        <div><div class="eyebrow">Play room</div><h2>For the delightful detours.</h2></div>
+        <p>Mini-games and creative experiments with brighter colors, bolder type, and a bit more groove.</p>
+      </div>
+      <div class="grid two">
+        {games.map((item) => <Card item={item} dark />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section sand">
+    <div class="container">
+      <div class="split-callout">
+        <div class="split-callout-art" aria-hidden="true"></div>
+        <div class="split-callout-copy">
+          <div class="eyebrow">Store notes</div>
+          <h2>New things, when they’re ready.</h2>
+          <p>Seasonal products, specials, and small announcements will find their way here—kept current by the people closest to the shelves.</p>
+          <a class="button" href="/specials/">Visit store notes</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div><div class="eyebrow">Elsewhere</div><h2>Signals from the workbench.</h2></div>
+        <p>Music, visual notes, and experiments that don’t need to become anything bigger.</p>
+      </div>
+      <div class="grid two">
+        {projects.map((item) => <Card item={item} />)}
+      </div>
+    </div>
+  </section>
+  <Newsletter />
+</BaseLayout>

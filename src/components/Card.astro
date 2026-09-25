@@ -1,0 +1,25 @@
+---
+import type { ContentCard } from '../data/content';
+
+interface Props {
+  item: ContentCard;
+  dark?: boolean;
+}
+
+const { item, dark = false } = Astro.props;
+const classes = ['card', item.theme === 'play' ? 'play-card' : '', dark ? 'dark-card' : ''].filter(Boolean).join(' ');
+const imageClasses = ['card-image', item.imageFit === 'contain' ? 'image-contain' : ''].filter(Boolean).join(' ');
+---
+
+<a class={classes} style={`--accent: var(--${item.accent})`} href={`/${item.theme === 'play' ? 'games' : item.eyebrow.toLowerCase().startsWith('music') || item.eyebrow.toLowerCase().startsWith('project') ? 'projects' : 'apps'}/${item.slug}/`}>
+  {item.image && <img class={imageClasses} src={item.image} alt="" loading="lazy" />}
+  <div>
+    <div class="eyebrow">{item.eyebrow}</div>
+    <h3 class="card-title">{item.title}</h3>
+    <p class="card-copy">{item.description}</p>
+  </div>
+  <div class="card-footer">
+    <span class="status">{item.status}</span>
+    <span class="arrow" aria-hidden="true">↗</span>
+  </div>
+</a>

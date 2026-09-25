@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSpecials } from '../../lib/sanity';
+
+const specials = await getSpecials();
+---
+
+<BaseLayout title="Store specials — Collectively Bzy" description="New products and store specials from Collectively Bzy.">
+  <section class="page-hero"><div class="container"><div class="eyebrow">Store notes</div><h1>New things on the shelf.</h1><p>Product photos, seasonal specials, dates, and calls to action—kept simple for store teams and clear for everyone else.</p></div></section>
+  <section class="section"><div class="container"><div class="grid two">{specials.map((special) => <article class="card" style={`--accent: var(--${special.accent})`}><div><div class="eyebrow">{special.eyebrow}</div><h2 class="card-title">{special.title}</h2><p class="card-copy">{special.description}</p></div><div class="card-footer"><span class="status">{special.timing}</span><a class="button" href={special.url}>{special.cta}</a></div></article>)}</div></div></section>
+</BaseLayout>

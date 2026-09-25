@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import { getApps } from '../../lib/sanity';
+
+const apps = await getApps();
+---
+
+<BaseLayout title="Apps — Collectively Bzy" description="Apps from Collectively Bzy.">
+  <section class="page-hero"><div class="container"><div class="eyebrow">Studio templates</div><h1>Apps for a better rhythm.</h1><p>Thoughtful tools for focus, creativity, and the small daily choices that shape a life.</p></div></section>
+  <section class="section"><div class="container"><div class="grid two">{apps.map((item) => <Card item={item} />)}</div></div></section>
+</BaseLayout>

@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import { getProjects } from '../../lib/sanity';
+
+const projects = await getProjects();
+---
+
+<BaseLayout title="Music and projects — Collectively Bzy" description="Music, visual notes, and creative projects from Collectively Bzy.">
+  <section class="page-hero"><div class="container"><div class="eyebrow">Music + projects</div><h1>Signals from the workbench.</h1><p>Not every idea needs to become an app. Some want to be a sound, a page, or a place to wander.</p></div></section>
+  <section class="section"><div class="container"><div class="grid two">{projects.map((item) => <Card item={item} />)}</div></div></section>
+</BaseLayout>

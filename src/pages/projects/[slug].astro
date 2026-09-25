@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getProjects } from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((item) => ({ params: { slug: item.slug }, props: { item } }));
+}
+
+const { item } = Astro.props;
+---
+
+<BaseLayout title={`${item.title} — Collectively Bzy`} description={item.description}>
+  <section class="detail-hero"><div class="container"><div class="eyebrow">{item.eyebrow}</div><h1>{item.title}</h1><p>{item.description}</p><div class="detail-meta">{item.tags?.map((tag) => <span class="tag">{tag}</span>)}</div></div></section>
+  <section class="section"><div class="container"><div class="prose"><p><span class="script">A project note:</span> This page is ready for approved descriptions, artwork, audio or video embeds, credits, and links.</p><blockquote>Make something small enough to finish, and strange enough to remember.</blockquote></div></div></section>
+</BaseLayout>

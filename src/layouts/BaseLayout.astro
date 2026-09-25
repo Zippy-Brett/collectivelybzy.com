@@ -1,0 +1,39 @@
+---
+import Navigation from '../components/Navigation.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  theme?: 'studio' | 'play';
+}
+
+const { title = 'Collectively Bzy — apps, games, music, and bright little experiments', description = 'Collectively Bzy is a creative studio for thoughtful apps, playful games, music, and experiments.', theme = 'studio' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content={theme === 'play' ? '#17242a' : '#082c3a'} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="site-shell">
+      <Navigation />
+      <main id="main-content">
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <div class="container footer-wrap">
+          <p>© {new Date().getFullYear()} Collectively Bzy.</p>
+          <p>Thoughtful tools, playful detours, and room to make.</p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

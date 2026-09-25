@@ -1,0 +1,11 @@
+# Godot editor cache and imported artifacts
+.godot/
+
+# Exported builds and local machine settings
+build/
+export.cfg
+
+# Native/editor temporary files
+*.translation
+*.tmp
+.DS_Store

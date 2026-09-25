@@ -1,0 +1,14 @@
+{
+  "name": "collectively-bzy-public-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@sanity/client": "^8.7.0",
+    "astro": "^5.0.0"
+  }
+}

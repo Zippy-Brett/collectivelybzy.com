@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Card from '../../components/Card.astro';
+import { getGames } from '../../lib/sanity';
+
+const games = await getGames();
+---
+
+<BaseLayout title="Play — Collectively Bzy" description="Mini-games and creative experiments from Collectively Bzy." theme="play">
+  <section class="page-hero"><div class="container"><div class="eyebrow">Play templates</div><h1>Make a little mischief.</h1><p>Mini-games and experiments with brighter colors, bolder type, and a playful groove.</p></div></section>
+  <section class="section dark"><div class="container"><div class="grid two">{games.map((item) => <Card item={item} dark />)}</div></div></section>
+</BaseLayout>
