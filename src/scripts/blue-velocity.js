@@ -73,7 +73,10 @@ if (canvas && game) {
   }
   function award(points) { score += points; }
   function tangler(reason) {
-    if (shield > 0) { shield = 0; ui['tail-length'].textContent = 'SHIELD · WAKE 18 M'; showToast('SHIELD SNAPPED · SWIM FREE'); return false; }
+    if (shield > 0) {
+      shield = 0; wake = [{ x: player.x, y: player.y, traveled: distance }]; wakeDrawDistance = 0;
+      ui['tail-length'].textContent = `WAKE ${Math.round(WORLD.wakeLength)} M`; showToast('SHIELD SNAPPED · WAKE CUT · SWIM FREE'); return false;
+    }
     finish(reason); return true;
   }
 
@@ -237,7 +240,7 @@ if (canvas && game) {
   }
 
   function drawNet(t) {
-    const p = screen(t.x, t.y); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(t.angle);
+    const p = screen(t.x, t.y); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(-t.angle);
     const w = t.w * scale, h = t.h * scale;
     ctx.fillStyle = '#243f3999'; ctx.strokeStyle = '#e5c477'; ctx.lineWidth = 2.4; ctx.shadowColor = '#edc97b88'; ctx.shadowBlur = 10;
     ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2, -h / 2, w, h); ctx.shadowBlur = 0;
