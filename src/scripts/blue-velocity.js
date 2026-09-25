@@ -2,11 +2,12 @@ const canvas = document.querySelector('#ocean-canvas');
 const game = document.querySelector('#blue-game');
 if (canvas && game) {
   const ctx = canvas.getContext('2d');
-  const ui = Object.fromEntries(['distance', 'score', 'speed', 'run-seed', 'best-distance', 'game-message', 'start-run', 'toast', 'jump-fill', 'hits'].map((id) => [id, document.getElementById(id)]));
+  const ui = Object.fromEntries(['distance', 'score', 'speed', 'run-seed', 'best-distance', 'game-message', 'start-run', 'toast', 'jump-fill', 'hits', 'depth'].map((id) => [id, document.getElementById(id)]));
   const rand = (min, max) => min + Math.random() * (max - min);
   let width = 1, height = 1, dpr = 1, last = 0, raf = 0, toastUntil = 0;
-  let state = 'ready', run = 0, distance = 0, score = 0, speed = 28, playerX = 0, lean = 0, jump = 0, jumpTime = 0, trick = 0, invuln = 0, hull = 0;
+  let state = 'ready', run = 0, distance = 0, score = 0, speed = 28, playerX = 0, playerY = 0, lean = 0, jump = 0, jumpTime = 0, trick = 0, invuln = 0, hull = 0, seabedTimer = 0;
   let held = new Set(), things = [], particles = [], best = Number(localStorage.getItem('blueVelocityBest') || 0), cameraShake = 0;
+  let pad = { steer: 0, depth: 0, jump: false, trick: false, boost: false, brake: false }, padConnected = false;
   ui['best-distance'].textContent = `${best} M`;
 
   function resize() {
@@ -23,7 +24,7 @@ if (canvas && game) {
     if (color) { ctx.fillStyle = color; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = line; ctx.stroke(); }
   }
   function newRun() {
-    run++; distance = 0; score = 0; speed = 28; playerX = 0; lean = 0; jump = 0; jumpTime = 0; trick = 0; invuln = 1.4; hull = 0; ui.hits.querySelectorAll('i').forEach(i => i.classList.remove('lost')); things = []; particles = [];
+    run++; distance = 0; score = 0; speed = 28; playerX = 0; playerY = 0; lean = 0; jump = 0; jumpTime = 0; trick = 0; invuln = 1.4; hull = 0; seabedTimer = 0; ui.hits.querySelectorAll('i').forEach(i => i.classList.remove('lost')); things = []; particles = [];
     ui['run-seed'].textContent = String(Math.floor(Math.random() * 9000) + 1000); state = 'running'; ui['game-message'].classList.add('hidden'); last = performance.now();
     for (let z = 30; z < 245; z += rand(15, 26)) spawn(z);
     cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
@@ -37,23 +38,28 @@ if (canvas && game) {
   function addScore(n) { score += n; }
   function update(dt) {
     if (state !== 'running') return;
-    const steer = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
-    const boosting = held.has('boost') && speed > 14, braking = held.has('brake');
+    const steer = Math.max(-1, Math.min(1, (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0) + pad.steer));
+    const swim = Math.max(-1, Math.min(1, (held.has('rise') ? 1 : 0) - (held.has('dive') ? 1 : 0) + pad.depth));
+    const boosting = (held.has('boost') || pad.boost) && speed > 14, braking = held.has('brake') || pad.brake;
     speed += (boosting ? 20 : braking ? -25 : 3.6) * dt; speed = Math.max(12, Math.min(61, speed));
-    playerX = Math.max(-7, Math.min(7, playerX + steer * dt * (3.7 + speed * .045))); lean += (steer * .29 - lean) * Math.min(1, dt * 6);
+    playerX = Math.max(-5.2, Math.min(5.2, playerX + steer * dt * (3.7 + speed * .045))); playerY = Math.max(-1.25, Math.min(2.25, playerY + swim * dt * 3.8));
+    if (playerY < -.5) speed = Math.max(12, speed - 9 * dt);
+    if (playerY < -.72) { seabedTimer += dt; if (seabedTimer > 2.1 && invuln <= 0) { seabedTimer = 0; hull++; invuln = 1; speed = Math.max(12, speed - 8); ui.hits.children[hull-1]?.classList.add('lost'); toast('SEAFLOOR SURGE · CLIMB'); if (hull >= 3) { finish(); return; } } } else seabedTimer = Math.max(0, seabedTimer - dt * 2);
+    lean += (steer * .29 - lean) * Math.min(1, dt * 6);
     distance += speed * dt * .12; addScore(speed * dt * .35);
-    if (jumpTime > 0) { jumpTime -= dt; jump = Math.sin((1 - jumpTime / .95) * Math.PI) * 5.5; if (jumpTime <= 0) { jump = 0; if (trick) { addScore(250 + trick * 150); toast(trick >= 2 ? 'DOUBLE BARREL · +550' : 'CLEAN FLIP · +400'); } trick = 0; } }
+    if (jumpTime > 0) { jumpTime -= dt; jump = Math.sin((1 - jumpTime / 1.25) * Math.PI) * 8.5; if (jumpTime <= 0) { jump = 0; if (trick) { addScore(250 + trick * 150); toast(trick >= 2 ? 'DOUBLE BARREL · +550' : 'CLEAN FLIP · +400'); } trick = 0; } }
     if (boosting) particles.push({ x: playerX + rand(-.35,.35), y: -jump - .5, z: rand(2, 5), life: .5, max: .5 });
     for (const p of particles) p.life -= dt;
     particles = particles.filter(p => p.life > 0);
     for (const t of things) {
       t.z -= speed * dt * .78;
       if (t.hit) continue;
-      const near = t.z < 7.7 && t.z > 1.5 && Math.abs(t.x - playerX) < (t.kind === 'ring' ? 1.2 : 1.25);
-      if (t.kind === 'ring' && t.z < 6 && t.z > 1.5) { if (Math.abs(t.x-playerX)<.95 && jump>1.4) { t.hit=true; addScore(650); toast('RING THREAD · +650'); } }
+      const near = t.z < 8.5 && t.z > 1.2 && Math.abs(t.x - playerX) < (t.kind === 'ring' ? 1.2 : 1.25);
+      const vertical = playerY + jump;
+      if (t.kind === 'ring' && t.z < 18 && t.z > -1) { if (Math.abs(t.x-playerX)<1.2 && jump>5.3 && Math.abs(vertical-6.8)<2.1) { t.hit=true; addScore(650); toast('RING THREAD · +650'); } }
       else if (near && t.kind === 'boost') { t.hit=true; speed=Math.min(64,speed+16); addScore(180); toast('CURRENT SURGE · +180'); }
       else if (near && t.kind === 'down') { t.hit=true; speed=Math.max(13,speed-13); cameraShake=.3; toast(Math.random()<.5?'COLD POCKET · SLOWDOWN':'SILT CLOUD · BLIND SPOT'); }
-      else if (near && ['wreck','coral','net'].includes(t.kind) && jump < 2.7 && invuln <= 0) {
+      else if (near && ['wreck','coral','net'].includes(t.kind) && jump < 3.8 && vertical > (t.kind === 'net' ? -.05 : -.45) && vertical < (t.kind === 'wreck' ? 3.0 : 2.6) && invuln <= 0) {
         t.hit=true; speed=Math.max(14,speed*.53); invuln=1.15; cameraShake=.48; hull++; ui.hits.children[hull-1]?.classList.add('lost');
         if (t.kind === 'net') toast('GHOST NET · TANGLED'); else if(t.kind==='coral') toast('REEF KISS · WATCH THE FIN'); else toast('WRECKED CURRENT · RECOVER');
         if (hull >= 3) { finish(); return; }
@@ -63,7 +69,7 @@ if (canvas && game) {
     things = things.filter(t => t.z > -2);
     while (things.length < 15) spawn(rand(155, 255));
     invuln=Math.max(0,invuln-dt);cameraShake=Math.max(0,cameraShake-dt);
-    ui.distance.textContent = Math.floor(distance).toLocaleString(); ui.score.textContent = String(Math.floor(score)).padStart(6,'0'); ui.speed.textContent = Math.floor(speed * 2.35); ui['jump-fill'].style.width = `${Math.max(0,100-jumpTime/0.95*100)}%`;
+    ui.distance.textContent = Math.floor(distance).toLocaleString(); ui.score.textContent = String(Math.floor(score)).padStart(6,'0'); ui.speed.textContent = Math.floor(speed * 2.35); ui.depth.textContent = playerY < -.72 ? 'SEAFLOOR · CLIMB' : `DEPTH ${Math.max(0, 2.25-playerY).toFixed(1)} M`; ui['jump-fill'].style.width = `${Math.max(0,100-jumpTime/1.25*100)}%`;
     if (performance.now() > toastUntil) ui.toast.classList.remove('show');
   }
   function drawBackground(time) {
@@ -98,7 +104,7 @@ if (canvas && game) {
     ctx.strokeStyle='#d6c98777';for(let i=1;i<7;i++){const q=i/7;ctx.beginPath();ctx.moveTo(p1.x+(p2.x-p1.x)*q,p1.y);ctx.lineTo(p4.x+(p3.x-p4.x)*q,p4.y);ctx.stroke();}for(let i=1;i<7;i++){const q=i/7;ctx.beginPath();ctx.moveTo(p1.x,p1.y+(p4.y-p1.y)*q);ctx.lineTo(p2.x,p2.y+(p3.y-p2.y)*q);ctx.stroke();}
   }
   function drawRing(t) {
-    const p=project(t.x,1.8,t.z),r=p.s*1.38;ctx.save();ctx.strokeStyle='#d8fb78';ctx.lineWidth=Math.max(2,p.s*.13);ctx.shadowColor='#c8ff8a';ctx.shadowBlur=Math.max(4,p.s*.2);ctx.beginPath();ctx.ellipse(p.x,p.y,r,r*1.12,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#f0ffe5';ctx.lineWidth=Math.max(1,p.s*.025);ctx.beginPath();ctx.ellipse(p.x,p.y,r*.84,r*.94,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+    const p=project(t.x,.9,t.z),r=p.s*1.62;ctx.save();ctx.strokeStyle='#d8fb78';ctx.lineWidth=Math.max(2,p.s*.13);ctx.shadowColor='#c8ff8a';ctx.shadowBlur=Math.max(4,p.s*.2);ctx.beginPath();ctx.ellipse(p.x,p.y,r,r*1.12,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#f0ffe5';ctx.lineWidth=Math.max(1,p.s*.025);ctx.beginPath();ctx.ellipse(p.x,p.y,r*.84,r*.94,0,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
   function drawPower(t,time) {
     const p=project(t.x,1.7+Math.sin(time*.004+t.wobble)*.2,t.z),s=p.s*.38;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(time*.001+t.wobble);ctx.fillStyle=t.kind==='boost'?'#d8fb78':'#ff887b';ctx.strokeStyle='#efffdf';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.82,0);ctx.lineTo(0,s);ctx.lineTo(-s*.82,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#173841';ctx.font=`bold ${Math.max(9,s*.9)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.kind==='boost'?'↗':'!',0,0);ctx.restore();
@@ -108,7 +114,7 @@ if (canvas && game) {
     for(const p of particles){const q=project(p.x,p.y,p.z);ctx.globalAlpha=p.life/p.max;ctx.fillStyle='#e9ffd4';ctx.beginPath();ctx.arc(q.x,q.y,Math.max(1,q.s*.06),0,7);ctx.fill();}ctx.globalAlpha=1;
   }
   function drawDolphin(time) {
-    const cx=width*.5-lean*18,cy=height*.77-jump*Math.min(height*.04,22),scale=Math.min(width,height)*.115;ctx.save();ctx.translate(cx,cy);ctx.rotate(-lean*.22);ctx.scale(scale,scale);
+    const cx=width*.5-lean*18,cy=height*.73-(jump+playerY)*Math.min(height*.055,38),scale=Math.min(width,height)*.115;ctx.save();ctx.translate(cx,cy);ctx.rotate(-lean*.22);ctx.scale(scale,scale);
     // A sculpted, three-quarter dolphin silhouette with a moonlit back and pale belly.
     const flick=Math.sin(time*.014)*.18;
     ctx.shadowColor='#00111e88';ctx.shadowBlur=30;ctx.shadowOffsetY=16;
@@ -124,18 +130,28 @@ if (canvas && game) {
     ctx.save();if(cameraShake){ctx.translate(rand(-1,1)*cameraShake*15,rand(-1,1)*cameraShake*12);}drawBackground(time);drawWorld(time);drawDolphin(time);ctx.restore();
     if(jump>2){ctx.save();ctx.globalAlpha=Math.min(.18,jump*.025);ctx.fillStyle='#e8ffe4';ctx.fillRect(0,0,width,height*.46);ctx.restore();}
   }
-  function frame(time) {const dt=Math.min(.05,Math.max(0,(time-last)/1000));last=time;update(dt);render(time);if(state==='running')raf=requestAnimationFrame(frame);}
-  function leap() {if(state==='running'&&jumpTime<=.05){jumpTime=.95;jump=0;trick=0;}else if(state==='running'&&jumpTime>.05){trick=Math.min(2,trick+1);}}
-  const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'boost',KeyW:'boost',ArrowDown:'brake',KeyS:'brake'};
-  window.addEventListener('keydown',e=>{if(keys[e.code]){held.add(keys[e.code]);e.preventDefault();}if(e.code==='Space'){e.preventDefault();if(!e.repeat)leap();}if(e.code==='Enter'&&state!=='running')newRun();});
+  function pollGamepad() {
+    const controller = navigator.getGamepads?.().find(p => p && p.connected);
+    if (!controller) { pad.steer=0; pad.depth=0; pad.jump=false; pad.trick=false; pad.boost=false; pad.brake=false; return; }
+    const axis = n => { const value=controller.axes[n]||0; return Math.abs(value)<.18?0:value; };
+    const button = n => controller.buttons[n]?.pressed ?? false;
+    const jumpDown=button(0), trickDown=button(1);
+    if (jumpDown&&!pad.jump) { if (state==='running') leap(); else newRun(); }
+    if (trickDown&&!pad.trick&&jumpTime>.05) trick=Math.min(2,trick+1);
+    pad.jump=jumpDown; pad.trick=trickDown; pad.steer=axis(0); pad.depth=-axis(3); pad.boost=button(7)||button(3); pad.brake=button(6)||button(2);
+  }
+  function frame(time) {const dt=Math.min(.05,Math.max(0,(time-last)/1000));last=time;pollGamepad();update(dt);render(time);raf=requestAnimationFrame(state==='running'?frame:menuFrame);}
+  function menuFrame(time) { pollGamepad(); if(state==='running') return; render(time); raf=requestAnimationFrame(menuFrame); }
+  function leap() {if(state==='running'&&jumpTime<=.05){jumpTime=1.25;jump=0;trick=0;}else if(state==='running'&&jumpTime>.05){trick=Math.min(2,trick+1);}}
+  const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'boost',KeyW:'boost',ArrowDown:'brake',KeyS:'brake',KeyE:'rise',KeyQ:'dive'};
+  window.addEventListener('keydown',e=>{if(keys[e.code]){held.add(keys[e.code]);e.preventDefault();}if(e.code==='Space'){e.preventDefault();if(!e.repeat)leap();}if(e.code==='ShiftLeft'&&!e.repeat&&jumpTime>.05)trick=Math.min(2,trick+1);if(e.code==='Enter'&&state!=='running')newRun();});
   window.addEventListener('keyup',e=>{if(keys[e.code])held.delete(keys[e.code]);});
   window.addEventListener('blur',()=>held.clear());
+  window.addEventListener('gamepadconnected',()=>{padConnected=true;toast('CONTROLLER READY · LEFT STICK / A TO LEAP');if(!raf)raf=requestAnimationFrame(menuFrame);});
+  window.addEventListener('gamepaddisconnected',()=>{padConnected=Array.from(navigator.getGamepads?.()||[]).some(p=>p&&p.connected);if(!padConnected)toast('CONTROLLER DISCONNECTED');});
   game.querySelectorAll('[data-hold]').forEach(button=>{const key=button.dataset.hold;button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);held.add(key);button.classList.add('active');});const release=()=>{held.delete(key);button.classList.remove('active');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);});
   ui['start-run'].addEventListener('click',newRun);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){held.clear();last=performance.now();}});
   function finish() {state='over';if(distance>best){best=Math.floor(distance);localStorage.setItem('blueVelocityBest',String(best));ui['best-distance'].textContent=`${best} M`;}ui['game-message'].innerHTML=`<div class="message-stamp">CURRENT COMPLETE · RUN ${ui['run-seed'].textContent}</div><h2>${Math.floor(distance)}<br />metres.</h2><p>You scored ${Math.floor(score).toLocaleString()} points in the open blue.</p><button class="launch" id="start-run">SWIM AGAIN <span>↗</span></button><div class="best-line">PERSONAL BEST <b>${best} M</b></div>`;ui['game-message'].classList.remove('hidden');ui['start-run']=document.getElementById('start-run');ui['start-run'].addEventListener('click',newRun);}
-  // Keep this dream endless: a soft reef wash at the margins nudges you back toward open water.
-  function boundaryCheck(){if(state==='running'&&Math.abs(playerX)>6.85){playerX=Math.sign(playerX)*6.85;speed=Math.max(16,speed-6);toast('THE BLUE HAS EDGES');}}
-  const gameFrame=frame;frame=function(time){boundaryCheck();gameFrame(time);};
-  state='ready';render(performance.now());
+  state='ready';render(performance.now());raf=requestAnimationFrame(menuFrame);
 }
