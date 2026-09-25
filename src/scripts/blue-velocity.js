@@ -1,161 +1,376 @@
 const canvas = document.querySelector('#ocean-canvas');
 const game = document.querySelector('#blue-game');
+
 if (canvas && game) {
   const ctx = canvas.getContext('2d');
-  const ui = Object.fromEntries(['distance', 'score', 'speed', 'run-seed', 'best-distance', 'game-message', 'start-run', 'toast', 'jump-fill', 'hits', 'depth'].map((id) => [id, document.getElementById(id)]));
+  const ids = ['distance', 'score', 'speed', 'run-seed', 'best-distance', 'game-message', 'start-run', 'toast', 'tail-length', 'tangle-flash'];
+  const ui = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+  const dolphin = new Image();
+  dolphin.src = '/images/blue-velocity-dolphin.png';
   const rand = (min, max) => min + Math.random() * (max - min);
-  let width = 1, height = 1, dpr = 1, last = 0, raf = 0, toastUntil = 0;
-  let state = 'ready', run = 0, distance = 0, score = 0, speed = 28, playerX = 0, playerY = 0, lean = 0, jump = 0, jumpTime = 0, trick = 0, invuln = 0, hull = 0, seabedTimer = 0;
-  let held = new Set(), things = [], particles = [], best = Number(localStorage.getItem('blueVelocityBest') || 0), cameraShake = 0;
-  let pad = { steer: 0, depth: 0, jump: false, trick: false, boost: false, brake: false }, padConnected = false;
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const courseCenter = (y) => 2.1 * Math.sin(y * 0.026) + 1.1 * Math.sin(y * 0.009 + 1.2);
+  const courseHalfWidth = 10.5;
+  const WORLD = { sampleStep: 0.42, wakeLength: 18 };
+  let width = 1, height = 1, dpr = 1, scale = 20, last = 0, raf = 0, toastUntil = 0;
+  let state = 'ready', run = 0, distance = 0, score = 0, speed = 5.2;
+  let player = { x: 0, y: 0, heading: 0, vx: 0, vy: 0 };
+  let camera = { x: 0, y: 0 }, wake = [], wakeDrawDistance = 0, things = [], bubbles = [], held = new Set();
+  let shield = 0, surge = 0, slow = 0, best = Number(localStorage.getItem('blueVelocityBest') || 0);
+  let pad = { turn: 0, boost: false, brake: false, flick: false }, padFlick = false;
+  let seed = 0, nextSpawnY = 18, lastNearMiss = -10;
   ui['best-distance'].textContent = `${best} M`;
 
   function resize() {
-    const r = canvas.getBoundingClientRect(); dpr = Math.min(devicePixelRatio || 1, 2); width = Math.max(1, r.width); height = Math.max(1, r.height);
-    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = canvas.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, rect.width); height = Math.max(1, rect.height);
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    scale = Math.max(12, Math.min(width / 21, height / 22));
   }
-  new ResizeObserver(resize).observe(canvas); resize();
-  const project = (x, y, z) => {
-    const focal = Math.min(width, height) * .9, scale = focal / (z + 5);
-    return { x: width * .5 + (x - playerX * .9) * scale * 1.7, y: height * .46 + (0.2 - y) * scale, s: scale };
-  };
-  function path(points, color, stroke, line = 1) {
-    ctx.beginPath(); points.forEach((p, i) => { const q = project(p[0], p[1], p[2]); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
-    if (color) { ctx.fillStyle = color; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = line; ctx.stroke(); }
-  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  const screen = (x, y) => ({ x: width * 0.5 + (x - camera.x) * scale, y: height * 0.68 - (y - camera.y) * scale });
+  const isOnscreen = (x, y, margin = 150) => { const p = screen(x, y); return p.x > -margin && p.x < width + margin && p.y > -margin && p.y < height + margin; };
+
   function newRun() {
-    run++; distance = 0; score = 0; speed = 28; playerX = 0; playerY = 0; lean = 0; jump = 0; jumpTime = 0; trick = 0; invuln = 1.4; hull = 0; seabedTimer = 0; ui.hits.querySelectorAll('i').forEach(i => i.classList.remove('lost')); things = []; particles = [];
-    ui['run-seed'].textContent = String(Math.floor(Math.random() * 9000) + 1000); state = 'running'; ui['game-message'].classList.add('hidden'); last = performance.now();
-    for (let z = 42; z < 250; z += rand(32, 44)) spawn(z);
+    run += 1; seed = Math.floor(Math.random() * 899999) + 100000;
+    distance = 0; score = 0; speed = 5.2; shield = 0; surge = 0; slow = 0; WORLD.wakeLength = 18;
+    player = { x: courseCenter(0), y: 0, heading: 0, vx: 0, vy: 0 };
+    camera = { x: player.x, y: player.y }; wake = [{ x: player.x, y: player.y, traveled: 0 }];
+    wakeDrawDistance = 0; things = []; bubbles = []; nextSpawnY = 18; lastNearMiss = -10;
+    ui['run-seed'].textContent = String(seed); ui.distance.textContent = '0'; ui.score.textContent = '000000';
+    state = 'running'; ui['game-message'].classList.add('hidden'); ui['tangle-flash'].classList.remove('show');
+    held.clear(); last = performance.now();
+    nextSpawnY = 18;
+    while (nextSpawnY < 125) { spawnEncounter(nextSpawnY); nextSpawnY += rand(19, 29); }
     cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
   }
-  function spawn(z) {
-    const lane = () => rand(-8.2, 8.2), type = Math.random();
-    let kind = type < .28 ? 'wreck' : type < .52 ? 'coral' : type < .7 ? 'net' : type < .86 ? 'ring' : Math.random() < .5 ? 'boost' : 'down';
-    things.push({ kind, x: lane(), z, y: 0, wobble: rand(0, 6), hit: false, color: Math.random() });
+
+  function spawnEncounter(y) {
+    const center = courseCenter(y), kindRoll = Math.random();
+    let kind;
+    if (kindRoll < 0.30) kind = 'net';
+    else if (kindRoll < 0.57) kind = 'rope';
+    else if (kindRoll < 0.68) kind = 'reef';
+    else if (kindRoll < 0.76) kind = 'wreck';
+    else if (kindRoll < 0.9) kind = 'power';
+    else kind = 'down';
+    const x = center + rand(-6.5, 6.5);
+    const item = { kind, x, y, hit: false, passed: false, seed: Math.random() * 20, color: Math.floor(Math.random() * 4) };
+    if (kind === 'net') { item.angle = rand(-0.48, 0.48); item.w = rand(2.8, 4.1); item.h = rand(3.6, 5.5); }
+    if (kind === 'rope') { item.angle = rand(-0.75, 0.75); item.len = rand(4.8, 8.2); }
+    if (kind === 'reef') { item.r = rand(1.4, 2.5); }
+    if (kind === 'wreck') { item.r = rand(1.5, 2.25); item.angle = rand(-0.4, 0.4); }
+    if (kind === 'power' || kind === 'down') item.powerType = kind === 'power' ? ['surge', 'shield', 'trim'][Math.floor(Math.random() * 3)] : ['silt', 'longwake'][Math.floor(Math.random() * 2)];
+    things.push(item);
   }
-  function toast(message) { ui.toast.textContent = message; ui.toast.classList.add('show'); toastUntil = performance.now() + 1250; }
-  function addScore(n) { score += n; }
+
+  function showToast(message) {
+    ui.toast.textContent = message; ui.toast.classList.add('show'); toastUntil = performance.now() + 1350;
+  }
+  function award(points) { score += points; }
+  function tangler(reason) {
+    if (shield > 0) { shield = 0; ui['tail-length'].textContent = 'SHIELD · WAKE 18 M'; showToast('SHIELD SNAPPED · SWIM FREE'); return false; }
+    finish(reason); return true;
+  }
+
   function update(dt) {
     if (state !== 'running') return;
-    const steer = Math.max(-1, Math.min(1, (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0) + pad.steer));
-    const swim = Math.max(-1, Math.min(1, (held.has('rise') ? 1 : 0) - (held.has('dive') ? 1 : 0) + pad.depth));
-    const boosting = (held.has('boost') || pad.boost) && speed > 14, braking = held.has('brake') || pad.brake;
-    speed += (boosting ? 20 : braking ? -25 : 3.6) * dt; speed = Math.max(12, Math.min(61, speed));
-    playerX = Math.max(-8.8, Math.min(8.8, playerX + steer * dt * (5.3 + speed * .07))); playerY = Math.max(-1.25, Math.min(2.25, playerY + swim * dt * 3.8));
-    if (playerY < -.5) speed = Math.max(12, speed - 9 * dt);
-    if (playerY < -.72) { seabedTimer += dt; if (seabedTimer > 2.1 && invuln <= 0) { seabedTimer = 0; hull++; invuln = 1; speed = Math.max(12, speed - 8); ui.hits.children[hull-1]?.classList.add('lost'); toast('SEAFLOOR SURGE · CLIMB'); if (hull >= 3) { finish(); return; } } } else seabedTimer = Math.max(0, seabedTimer - dt * 2);
-    lean += (steer * .29 - lean) * Math.min(1, dt * 6);
-    distance += speed * dt * .12; addScore(speed * dt * .35);
-    if (jumpTime > 0) { jumpTime -= dt; jump = Math.sin((1 - jumpTime / 1.25) * Math.PI) * 8.5; if (jumpTime <= 0) { jump = 0; if (trick) { addScore(250 + trick * 150); toast(trick >= 2 ? 'DOUBLE BARREL · +550' : 'CLEAN FLIP · +400'); } trick = 0; } }
-    if (boosting) particles.push({ x: playerX + rand(-.35,.35), y: -jump - .5, z: rand(2, 5), life: .5, max: .5 });
-    for (const p of particles) p.life -= dt;
-    particles = particles.filter(p => p.life > 0);
-    for (const t of things) {
-      t.z -= speed * dt * .78;
-      if (t.hit) continue;
-      const collider = t.kind === 'wreck' ? 2.7 : t.kind === 'net' ? 1.7 : t.kind === 'ring' ? 1.2 : 1.25;
-      const near = t.z < 8.5 && t.z > 1.2 && Math.abs(t.x - playerX) < collider;
-      const vertical = playerY + jump;
-      if (t.kind === 'ring' && t.z < 18 && t.z > -1) { if (Math.abs(t.x-playerX)<1.2 && jump>5.3 && Math.abs(vertical-6.8)<2.1) { t.hit=true; addScore(650); toast('RING THREAD · +650'); } }
-      else if (near && t.kind === 'boost') { t.hit=true; speed=Math.min(64,speed+16); addScore(180); toast('CURRENT SURGE · +180'); }
-      else if (near && t.kind === 'down') { t.hit=true; speed=Math.max(13,speed-13); cameraShake=.3; toast(Math.random()<.5?'COLD POCKET · SLOWDOWN':'SILT CLOUD · BLIND SPOT'); }
-      else if (near && ['wreck','coral','net'].includes(t.kind) && jump < 3.8 && vertical > (t.kind === 'net' ? -.05 : -.45) && vertical < (t.kind === 'wreck' ? 3.0 : 2.6) && invuln <= 0) {
-        t.hit=true; speed=Math.max(14,speed*.53); invuln=1.15; cameraShake=.48; hull++; ui.hits.children[hull-1]?.classList.add('lost');
-        if (t.kind === 'net') toast('GHOST NET · TANGLED'); else if(t.kind==='coral') toast('REEF KISS · WATCH THE FIN'); else toast('WRECKED CURRENT · RECOVER');
-        if (hull >= 3) { finish(); return; }
+    dt = Math.min(dt, 0.04);
+    const turnInput = clamp((held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0) + pad.turn, -1, 1);
+    const boost = held.has('boost') || pad.boost;
+    const brake = held.has('brake') || pad.brake;
+    const maxTurn = 2.15;
+    player.heading += turnInput * maxTurn * dt;
+    const targetSpeed = (boost ? 8.6 : brake ? 3.0 : 5.6) * (slow > 0 ? 0.62 : 1) * (surge > 0 ? 1.45 : 1);
+    speed += (targetSpeed - speed) * Math.min(1, dt * 2.7);
+    player.vx = Math.sin(player.heading) * speed;
+    player.vy = Math.cos(player.heading) * speed;
+    const oldX = player.x, oldY = player.y;
+    player.x += player.vx * dt; player.y += player.vy * dt;
+    distance += Math.max(0, Math.hypot(player.x - oldX, player.y - oldY));
+    award(dt * speed * 1.8);
+    if (surge > 0) surge = Math.max(0, surge - dt);
+    if (slow > 0) slow = Math.max(0, slow - dt);
+
+    const center = courseCenter(player.y);
+    if (Math.abs(player.x - center) > courseHalfWidth - 0.7) {
+      const side = Math.sign(player.x - center);
+      player.x = center + side * (courseHalfWidth - 0.7);
+      player.heading *= 0.985;
+      if (distance - lastNearMiss > 12) { lastNearMiss = distance; showToast('REEF EDGE · COURSE BOUNDARY'); }
+    }
+    camera.x += (player.x - camera.x) * Math.min(1, dt * 1.55);
+    camera.y += (player.y - camera.y) * Math.min(1, dt * 5.0);
+
+    wakeDrawDistance += Math.hypot(player.x - oldX, player.y - oldY);
+    if (wakeDrawDistance >= WORLD.sampleStep) {
+      wake.push({ x: player.x, y: player.y, traveled: distance });
+      wakeDrawDistance = 0;
+      while (wake.length > 2 && distance - wake[0].traveled > WORLD.wakeLength) wake.shift();
+    }
+    if (wake.length > 12 && checkWakeCollision()) return;
+
+    while (nextSpawnY < player.y + 105) {
+      spawnEncounter(nextSpawnY);
+      nextSpawnY += rand(19, 29);
+    }
+    for (const thing of things) {
+      if (thing.hit) continue;
+      const dx = player.x - thing.x, dy = player.y - thing.y;
+      if ((thing.kind === 'net' || thing.kind === 'rope') && hitsTrap(thing, player.x, player.y)) {
+        thing.hit = true;
+        if (tangler(thing.kind === 'net' ? 'TANGLED IN A FISHING NET' : 'TANGLED IN A ROPE')) return;
+      } else if (thing.kind === 'reef' && Math.hypot(dx, dy) < thing.r + 0.55) {
+        thing.hit = true; player.heading += (dx < 0 ? -1 : 1) * 0.9; speed *= 0.65; award(-70); showToast('REEF SCRAPE · −70');
+      } else if (thing.kind === 'wreck' && Math.hypot(dx, dy) < thing.r + 0.65) {
+        thing.hit = true; player.heading += (dx < 0 ? -1 : 1) * 0.7; speed *= 0.58; award(-100); showToast('WRECK CURRENT · −100');
+      } else if ((thing.kind === 'power' || thing.kind === 'down') && Math.hypot(dx, dy) < 1.15) {
+        thing.hit = true; collect(thing);
+      } else if (dy < -5 && !thing.passed) {
+        thing.passed = true;
+        if ((thing.kind === 'net' || thing.kind === 'rope') && Math.abs(dx) < 1.8) { award(100); showToast('CLEAN THREAD · +100'); }
       }
-      if (t.z < 2 && !t.hit) { t.hit=true; if(t.kind==='ring') { addScore(30); } }
     }
-    things = things.filter(t => t.z > -2);
-    while (things.length < 7) {
-      const farthest = things.reduce((max, item) => Math.max(max, item.z), 150);
-      spawn(farthest + rand(32, 44));
-    }
-    invuln=Math.max(0,invuln-dt);cameraShake=Math.max(0,cameraShake-dt);
-    ui.distance.textContent = Math.floor(distance).toLocaleString(); ui.score.textContent = String(Math.floor(score)).padStart(6,'0'); ui.speed.textContent = Math.floor(speed * 2.35); ui.depth.textContent = playerY < -.72 ? 'SEAFLOOR · CLIMB' : `DEPTH ${Math.max(0, 2.25-playerY).toFixed(1)} M`; ui['jump-fill'].style.width = `${Math.max(0,100-jumpTime/1.25*100)}%`;
+    things = things.filter((thing) => thing.y > player.y - 28 && !thing.hit);
+    for (let i = 0; i < 4; i++) bubbles.push({ x: player.x + rand(-0.4, 0.4), y: player.y - rand(1, 2), life: 0.45 + Math.random() * 0.5 });
+    for (const b of bubbles) { b.y -= dt * 2.5; b.life -= dt; }
+    bubbles = bubbles.filter((b) => b.life > 0);
+    if (distance > best) { best = Math.floor(distance); localStorage.setItem('blueVelocityBest', String(best)); ui['best-distance'].textContent = `${best} M`; }
+    ui.distance.textContent = Math.floor(distance).toLocaleString();
+    ui.score.textContent = String(Math.max(0, Math.floor(score))).padStart(6, '0');
+    ui.speed.textContent = String(Math.round(speed * 3.6));
+    if (shield > 0) ui['tail-length'].textContent = `SHIELD · WAKE ${Math.round(WORLD.wakeLength)} M`;
+    else ui['tail-length'].textContent = `WAKE ${Math.round(WORLD.wakeLength)} M`;
     if (performance.now() > toastUntil) ui.toast.classList.remove('show');
   }
+
+  function collect(thing) {
+    const p = thing.powerType;
+    if (p === 'surge') { surge = 5.5; award(250); showToast('BLUE CURRENT · SPEED SURGE +250'); }
+    if (p === 'shield') { shield = 1; award(220); showToast('SHELL SHIELD · ONE TANGLE SAVED +220'); }
+    if (p === 'trim') { trimWake(6); award(180); showToast('WAKE CUT · −6 M · +180'); }
+    if (p === 'silt') { slow = 5; showToast('SILT CLOUD · SLOW CURRENT'); }
+    if (p === 'longwake') { WORLD.wakeLength = Math.min(28, WORLD.wakeLength + 5); showToast('KELP SNAG · LONGER WAKE'); }
+  }
+
+  function trimWake(meters) {
+    WORLD.wakeLength = Math.max(10, WORLD.wakeLength - meters);
+    while (wake.length > 2 && distance - wake[0].traveled > WORLD.wakeLength) wake.shift();
+  }
+
+  function checkWakeCollision() {
+    const checkX = player.x, checkY = player.y;
+    for (let i = 0; i < wake.length - 6; i++) {
+      const a = wake[i], b = wake[i + 1];
+      if (distance - b.traveled < 2.8) continue;
+      if (pointSegmentDistance(checkX, checkY, a.x, a.y, b.x, b.y) < 0.72) {
+        if (tangler('TANGLED IN YOUR OWN WAKE')) return true;
+        return false;
+      }
+    }
+    return false;
+  }
+
+  function pointSegmentDistance(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay, lengthSq = dx * dx + dy * dy;
+    const t = lengthSq ? clamp(((px - ax) * dx + (py - ay) * dy) / lengthSq, 0, 1) : 0;
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  }
+
+  function hitsTrap(thing, x, y) {
+    if (thing.kind === 'rope') {
+      const hx = Math.cos(thing.angle) * thing.len * 0.5, hy = Math.sin(thing.angle) * thing.len * 0.5;
+      return pointSegmentDistance(x, y, thing.x - hx, thing.y - hy, thing.x + hx, thing.y + hy) < 0.7;
+    }
+    const dx = x - thing.x, dy = y - thing.y, c = Math.cos(thing.angle), s = Math.sin(thing.angle);
+    const localX = dx * c + dy * s, localY = -dx * s + dy * c;
+    return Math.abs(localX) < thing.w * 0.5 + 0.45 && Math.abs(localY) < thing.h * 0.5 + 0.45;
+  }
+
   function drawBackground(time) {
-    const g = ctx.createLinearGradient(0,0,0,height); g.addColorStop(0,'#65c3c5');g.addColorStop(.22,'#278a9d');g.addColorStop(.53,'#075372');g.addColorStop(1,'#031e3a');ctx.fillStyle=g;ctx.fillRect(0,0,width,height);
-    const horizon=height*.46;
-    const sun=ctx.createRadialGradient(width*.72,horizon*.75,1,width*.72,horizon*.75,width*.45);sun.addColorStop(0,'#d8ffd477');sun.addColorStop(.2,'#b7fff033');sun.addColorStop(1,'#b7fff000');ctx.fillStyle=sun;ctx.fillRect(0,0,width,height*.7);
-    ctx.fillStyle='#b1efcf';ctx.globalAlpha=.72;ctx.beginPath();ctx.ellipse(width*.72,horizon*.65,Math.min(width,height)*.055,Math.min(width,height)*.055,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-    // Sun shafts converge toward the surface and drift with the swell.
-    ctx.save();ctx.globalAlpha=.09;for(let i=0;i<8;i++){const x=width*(.16+i*.12)+Math.sin(time*.00035+i)*18;ctx.fillStyle=i%2?'#c9ffe7':'#ecffce';ctx.beginPath();ctx.moveTo(x-4,horizon*.12);ctx.lineTo(x+4,horizon*.12);ctx.lineTo(x+width*.12,horizon+40);ctx.lineTo(x-width*.12,horizon+40);ctx.fill();}ctx.restore();
-    // Broken glints along the breathing surface.
-    ctx.save();ctx.globalAlpha=.32;ctx.strokeStyle='#c4fff0';for(let i=0;i<21;i++){const x=((i*139+time*.035)% (width+60))-30,y=horizon+Math.sin(time*.001+i)*4+i%4*2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+rand(6,25),y);ctx.stroke();}ctx.restore();
-    // Deep-sea floor tracks sell speed and perspective.
-    ctx.save();ctx.strokeStyle='#7cddcf';ctx.globalAlpha=.095;for(let i=-10;i<=10;i++){const q=project(i*3,-5,0);ctx.beginPath();ctx.moveTo(width*.5+(i*width*.09),horizon);ctx.lineTo(q.x,height);ctx.stroke();}for(let j=1;j<9;j++){const z=((j*19-distance*.9)%155)+4;const a=project(-40,-5,z),b=project(40,-5,z);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}ctx.restore();
-    // Floating marine snow.
-    ctx.fillStyle='#d3fff0';for(let i=0;i<38;i++){const x=((i*157+time*.018*(i%3+1))%(width+30))-15,y=(i*91+Math.sin(time*.0004+i)*12)%(height*.92);ctx.globalAlpha=.1+(i%5)*.045;ctx.fillRect(x,y,i%7===0?2:1,i%7===0?2:1);}ctx.globalAlpha=1;
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, '#39a5aa'); gradient.addColorStop(0.38, '#08728b'); gradient.addColorStop(1, '#032f50');
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, height);
+    ctx.save();
+    for (let i = 0; i < 20; i++) {
+      const x = ((i * 149 + time * (0.012 + (i % 3) * 0.006)) % (width + 100)) - 50;
+      const y = (i * 71 + Math.sin(time * 0.00035 + i) * 14) % height;
+      ctx.globalAlpha = 0.08 + (i % 5) * 0.018; ctx.strokeStyle = '#d9fff0'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(x, y, 24 + i % 4 * 7, 3, Math.sin(time * 0.0002 + i) * 0.1, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+    const step = 8;
+    const fromY = Math.floor((camera.y - 40) / step) * step;
+    const toY = camera.y + 58;
+    // A broad, softly lit corridor and two unmistakable reef edges define the route.
+    ctx.beginPath();
+    for (let y = fromY; y <= toY; y += 1.5) { const p = screen(courseCenter(y) - courseHalfWidth, y); ctx.lineTo(p.x, p.y); }
+    for (let y = toY; y >= fromY; y -= 1.5) { const p = screen(courseCenter(y) + courseHalfWidth, y); ctx.lineTo(p.x, p.y); }
+    ctx.closePath(); ctx.fillStyle = '#9ae6d119'; ctx.fill();
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      for (let y = fromY; y <= toY; y += 1.2) { const p = screen(courseCenter(y) + side * (courseHalfWidth - 0.1), y); y === fromY ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); }
+      ctx.strokeStyle = side === -1 ? '#9bffe0' : '#76d8cd'; ctx.lineWidth = 2.2; ctx.shadowColor = '#73ffe0'; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.setLineDash([4, 13]); ctx.lineWidth = 1; ctx.strokeStyle = '#e5ffe888'; ctx.stroke(); ctx.setLineDash([]);
+    }
+    // Current dashes in the center make forward motion and the route direction easy to read.
+    for (let y = fromY; y < toY; y += 9) {
+      const p = screen(courseCenter(y), y); ctx.globalAlpha = 0.24; ctx.fillStyle = '#d4fff0'; ctx.beginPath(); ctx.ellipse(p.x, p.y, 2, 6, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
+
+  function drawWake() {
+    if (wake.length < 2) return;
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (let i = 1; i < wake.length; i++) {
+      const a = wake[i - 1], b = wake[i], pa = screen(a.x, a.y), pb = screen(b.x, b.y);
+      const age = (distance - b.traveled) / Math.max(1, WORLD.wakeLength);
+      ctx.globalAlpha = 0.11 + (1 - age) * 0.36; ctx.strokeStyle = age < 0.2 ? '#e6ff8d' : '#70f6da'; ctx.lineWidth = Math.max(2, scale * (0.11 + (1 - age) * 0.08));
+      ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.restore();
+  }
+
+  function drawNet(t) {
+    const p = screen(t.x, t.y); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(t.angle);
+    const w = t.w * scale, h = t.h * scale;
+    ctx.fillStyle = '#243f3999'; ctx.strokeStyle = '#e5c477'; ctx.lineWidth = 2.4; ctx.shadowColor = '#edc97b88'; ctx.shadowBlur = 10;
+    ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2, -h / 2, w, h); ctx.shadowBlur = 0;
+    ctx.save(); ctx.beginPath(); ctx.rect(-w / 2, -h / 2, w, h); ctx.clip(); ctx.strokeStyle = '#f3e0a1a0'; ctx.lineWidth = 1;
+    for (let x = -w; x <= w; x += 13) { ctx.beginPath(); ctx.moveTo(x, -h); ctx.lineTo(x + h * 0.35, h); ctx.stroke(); }
+    for (let y = -h; y <= h; y += 12) { ctx.beginPath(); ctx.moveTo(-w, y); ctx.lineTo(w, y); ctx.stroke(); }
+    ctx.restore();
+    ctx.fillStyle = '#f9d57f'; for (const x of [-w / 2, w / 2]) { ctx.beginPath(); ctx.arc(x, 0, 4.5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+
+  function drawRope(t, time) {
+    const p = screen(t.x, t.y), hx = Math.cos(t.angle) * t.len * scale * 0.5, hy = Math.sin(t.angle) * t.len * scale * 0.5;
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = '#e7bd73'; ctx.lineWidth = 4; ctx.shadowColor = '#ffda8b'; ctx.shadowBlur = 9;
+    ctx.beginPath(); ctx.moveTo(p.x - hx, p.y - hy); ctx.quadraticCurveTo(p.x + Math.sin(time * 0.002 + t.seed) * 7, p.y + 3, p.x + hx, p.y + hy); ctx.stroke(); ctx.shadowBlur = 0;
+    for (const sign of [-1, 1]) { const x = p.x + hx * sign, y = p.y + hy * sign; ctx.fillStyle = '#f7a05e'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffe9b6'; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function drawReef(t, time) {
+    const p = screen(t.x, t.y), r = t.r * scale; ctx.save();
+    const colors = ['#f08a7e', '#ffc067', '#a1dd99', '#d898d4'];
+    ctx.fillStyle = '#123d49'; ctx.beginPath(); ctx.ellipse(p.x, p.y + r * 0.27, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    for (let i = -2; i <= 2; i++) { const h = r * (0.65 + ((i + 3) % 3) * 0.16); const x = p.x + i * r * 0.22; ctx.strokeStyle = colors[(t.color + i + 8) % colors.length]; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, p.y + r * 0.25); ctx.quadraticCurveTo(x + Math.sin(time * 0.001 + i) * 4, p.y - h * 0.35, x + Math.sin(i * 5) * r * 0.18, p.y - h); ctx.stroke(); ctx.beginPath(); ctx.arc(x + Math.sin(i * 5) * r * 0.18, p.y - h, 3.5, 0, Math.PI * 2); ctx.fillStyle = colors[(t.color + i + 8) % colors.length]; ctx.fill(); }
+    ctx.restore();
+  }
+
   function drawWreck(t) {
-    const z=t.z,x=t.x, rust='#675344', edge='#b38961';
-    path([[x-3.2,.2,z],[x-2.5,1.15,z],[x+2.3,1.15,z],[x+3.1,.2,z],[x+2.2,-.28,z],[x-2.3,-.28,z]],'#354955',edge,Math.max(1,project(x,0,z).s*.025));
-    path([[x-2.4,1.15,z],[x-2.3,2.3,z],[x+1.8,2.3,z],[x+2.3,1.15,z]],'#725c49','#b38a64');
-    path([[x-2.3,2.3,z],[x-1.2,2.8,z],[x+1.8,2.3,z],[x-2.3,2.3,z]],null,'#c5a77c',2);
-    for(const d of [-1.4,0,1.3])path([[x+d,.2,z-.02],[x+d,1.1,z-.02]],null,'#d2ac77',Math.max(1,project(x,0,z).s*.035));
-    const p=project(x,2.9,z);ctx.fillStyle='#d8c19c';ctx.font=`${Math.max(7,p.s*.3)}px monospace`;ctx.fillText('✳',p.x,p.y);
+    const p = screen(t.x, t.y), r = t.r * scale; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(t.angle);
+    ctx.fillStyle = '#263d45'; ctx.strokeStyle = '#a9825d'; ctx.lineWidth = 2; ctx.shadowColor = '#00182288'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.moveTo(-r * 0.5, -r); ctx.lineTo(r * 0.45, -r * 0.88); ctx.lineTo(r * 0.82, r * 0.68); ctx.lineTo(0, r); ctx.lineTo(-r * 0.76, r * 0.55); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#c5a16f'; ctx.beginPath(); ctx.moveTo(0, -r * 0.8); ctx.lineTo(0, r * 0.6); ctx.moveTo(-r * 0.55, 0); ctx.lineTo(r * 0.55, 0); ctx.stroke(); ctx.restore();
   }
-  function drawCoral(t,time) {
-    const z=t.z,x=t.x,s=project(x,0,z).s, colors=['#ff826e','#f5c271','#cc8dc2','#9ad27f'];ctx.save();ctx.lineCap='round';
-    for(let i=0;i<5;i++){const bx=x+(i-2)*.47,h=rand(1.1,2.6);const a=project(bx,-.35,z),b=project(bx+Math.sin(time*.001+i)*.2,h,z);ctx.strokeStyle=colors[(i+Math.floor(t.color*4))%4];ctx.lineWidth=Math.max(2,s*.11);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b.x+Math.sin(i*4)*s*.17,b.y-s*.28);ctx.stroke();ctx.beginPath();ctx.arc(b.x,b.y,s*.095,0,Math.PI*2);ctx.fillStyle=ctx.strokeStyle;ctx.fill();}
-    const base=project(x,-.1,z);ctx.fillStyle='#88745e';ctx.beginPath();ctx.ellipse(base.x,base.y,s*.7,s*.17,0,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  function drawPower(t, time) {
+    const p = screen(t.x, t.y + Math.sin(time * 0.003 + t.seed) * 0.15), r = scale * 0.52;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(time * 0.0006 + t.seed); ctx.fillStyle = t.kind === 'power' ? '#d7ff83' : '#fa7881'; ctx.strokeStyle = '#f4fff0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(r * 0.82, 0); ctx.lineTo(0, r); ctx.lineTo(-r * 0.82, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.rotate(-(time * 0.0006 + t.seed)); ctx.fillStyle = '#173c45'; ctx.font = `bold ${Math.max(11, r * 0.85)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const labels = { surge: '↗', shield: '◇', trim: '✂', silt: '!', longwake: '↝' }; ctx.fillText(labels[t.powerType], 0, 0); ctx.restore();
   }
-  function drawNet(t,time) {
-    const x=t.x,z=t.z,p1=project(x-1.8,.1,z),p2=project(x+1.8,.1,z),p3=project(x+1.8,3.2,z),p4=project(x-1.8,3.2,z);ctx.strokeStyle='#cfb76b';ctx.lineWidth=Math.max(1,project(x,0,z).s*.025);ctx.fillStyle='#826c4355';ctx.beginPath();[p1,p2,p3,p4].forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.strokeStyle='#d6c98777';for(let i=1;i<7;i++){const q=i/7;ctx.beginPath();ctx.moveTo(p1.x+(p2.x-p1.x)*q,p1.y);ctx.lineTo(p4.x+(p3.x-p4.x)*q,p4.y);ctx.stroke();}for(let i=1;i<7;i++){const q=i/7;ctx.beginPath();ctx.moveTo(p1.x,p1.y+(p4.y-p1.y)*q);ctx.lineTo(p2.x,p2.y+(p3.y-p2.y)*q);ctx.stroke();}
+
+  function drawThings(time) {
+    const visible = things.filter((t) => !t.hit && isOnscreen(t.x, t.y, 120)).sort((a, b) => a.y - b.y);
+    for (const t of visible) {
+      if (t.kind === 'net') drawNet(t);
+      if (t.kind === 'rope') drawRope(t, time);
+      if (t.kind === 'reef') drawReef(t, time);
+      if (t.kind === 'wreck') drawWreck(t);
+      if (t.kind === 'power' || t.kind === 'down') drawPower(t, time);
+    }
   }
-  function drawRing(t) {
-    const p=project(t.x,.9,t.z),r=p.s*1.62;ctx.save();ctx.strokeStyle='#d8fb78';ctx.lineWidth=Math.max(2,p.s*.13);ctx.shadowColor='#c8ff8a';ctx.shadowBlur=Math.max(4,p.s*.2);ctx.beginPath();ctx.ellipse(p.x,p.y,r,r*1.12,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#f0ffe5';ctx.lineWidth=Math.max(1,p.s*.025);ctx.beginPath();ctx.ellipse(p.x,p.y,r*.84,r*.94,0,0,Math.PI*2);ctx.stroke();ctx.restore();
-  }
-  function drawPower(t,time) {
-    const p=project(t.x,1.7+Math.sin(time*.004+t.wobble)*.2,t.z),s=p.s*.38;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(time*.001+t.wobble);ctx.fillStyle=t.kind==='boost'?'#d8fb78':'#ff887b';ctx.strokeStyle='#efffdf';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.82,0);ctx.lineTo(0,s);ctx.lineTo(-s*.82,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#173841';ctx.font=`bold ${Math.max(9,s*.9)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.kind==='boost'?'↗':'!',0,0);ctx.restore();
-  }
-  function drawWorld(time) {
-    for(const t of [...things].sort((a,b)=>b.z-a.z)){if(t.hit)continue;switch(t.kind){case'wreck':drawWreck(t);break;case'coral':drawCoral(t,time);break;case'net':drawNet(t,time);break;case'ring':drawRing(t);break;default:drawPower(t,time)}}
-    for(const p of particles){const q=project(p.x,p.y,p.z);ctx.globalAlpha=p.life/p.max;ctx.fillStyle='#e9ffd4';ctx.beginPath();ctx.arc(q.x,q.y,Math.max(1,q.s*.06),0,7);ctx.fill();}ctx.globalAlpha=1;
-  }
+
   function drawDolphin(time) {
-    const cx=width*.5+playerX*width*.025-lean*18,cy=height*.73-(jump+playerY)*Math.min(height*.055,38),scale=Math.min(width,height)*.115;ctx.save();ctx.translate(cx,cy);ctx.rotate(-lean*.22);ctx.scale(scale,scale);
-    // A sculpted, three-quarter dolphin silhouette with a moonlit back and pale belly.
-    const flick=Math.sin(time*.014)*.18;
-    ctx.shadowColor='#00111e88';ctx.shadowBlur=30;ctx.shadowOffsetY=16;
-    ctx.fillStyle='#071e2b';ctx.beginPath();ctx.moveTo(-.55,.1);ctx.quadraticCurveTo(-1.02,-.13,-1.02,-.52);ctx.lineTo(-.64,-.34);ctx.quadraticCurveTo(-.75,-.93,-.2,-1.14);ctx.quadraticCurveTo(.37,-1.3,.72,-1.02);ctx.quadraticCurveTo(1.03,-.79,1.07,-.46);ctx.lineTo(1.58,-.18);ctx.quadraticCurveTo(1.67,-.09,1.5,-.07);ctx.lineTo(1.03,-.15);ctx.quadraticCurveTo(.85,.12,.44,.21);ctx.lineTo(.07,.28);ctx.lineTo(-.25,.87+flick);ctx.quadraticCurveTo(-.32,.99,-.44,.85);ctx.lineTo(-.56,.29);ctx.quadraticCurveTo(-.95,.41,-1.18,.2);ctx.quadraticCurveTo(-.9,.04,-.55,.1);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-    ctx.fillStyle='#1c6575';ctx.beginPath();ctx.moveTo(-.4,-.86);ctx.quadraticCurveTo(.14,-1.28,.67,-.99);ctx.quadraticCurveTo(.92,-.77,.98,-.52);ctx.quadraticCurveTo(.45,-.65,-.02,-.56);ctx.quadraticCurveTo(-.27,-.51,-.58,-.26);ctx.quadraticCurveTo(-.76,-.55,-.4,-.86);ctx.fill();
-    ctx.fillStyle='#d5ebe0';ctx.beginPath();ctx.moveTo(-.45,.12);ctx.quadraticCurveTo(-.02,.04,.31,-.05);ctx.quadraticCurveTo(.68,-.14,1.03,-.21);ctx.quadraticCurveTo(.77,.22,.28,.27);ctx.lineTo(-.15,.53);ctx.lineTo(-.4,.29);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#0b3442';ctx.beginPath();ctx.moveTo(.12,-.59);ctx.quadraticCurveTo(.26,-1.12,.54,-1.35);ctx.quadraticCurveTo(.63,-1.4,.6,-1.29);ctx.lineTo(.4,-.55);ctx.fill();
-    ctx.fillStyle='#071f2d';ctx.beginPath();ctx.moveTo(.28,.05);ctx.quadraticCurveTo(.65,.04,.74,.45);ctx.quadraticCurveTo(.69,.57,.58,.49);ctx.lineTo(.1,.23);ctx.fill();
-    ctx.fillStyle='#e9fff0';ctx.beginPath();ctx.arc(.76,-.66,.055,0,7);ctx.fill();ctx.fillStyle='#061921';ctx.beginPath();ctx.arc(.78,-.66,.025,0,7);ctx.fill();
-    ctx.fillStyle='#527e82';ctx.beginPath();ctx.arc(1.06,-.23,.018,0,7);ctx.arc(1.11,-.21,.018,0,7);ctx.fill();ctx.restore();
+    const p = screen(player.x, player.y); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(player.heading);
+    const pulse = 1 + Math.sin(time * 0.008) * 0.012;
+    if (dolphin.complete && dolphin.naturalWidth) {
+      const size = scale * 3.45 * pulse;
+      ctx.shadowColor = '#002432aa'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 7;
+      ctx.drawImage(dolphin, -size * 0.5, -size * 0.5, size, size);
+    } else {
+      ctx.fillStyle = '#d9eee5'; ctx.beginPath(); ctx.ellipse(0, 0, scale * 0.58, scale * 1.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#204f64'; ctx.beginPath(); ctx.moveTo(0, -scale * 1.8); ctx.lineTo(scale * 0.3, -scale * 1.1); ctx.lineTo(-scale * 0.3, -scale * 1.1); ctx.closePath(); ctx.fill();
+    }
+    if (shield > 0) { ctx.shadowColor = '#c6ff90'; ctx.shadowBlur = 22; ctx.strokeStyle = '#dcff9977'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, scale * 1.22, scale * 2.1, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
   }
+
   function render(time) {
-    ctx.save();if(cameraShake){ctx.translate(rand(-1,1)*cameraShake*15,rand(-1,1)*cameraShake*12);}drawBackground(time);drawWorld(time);drawDolphin(time);ctx.restore();
-    if(jump>2){ctx.save();ctx.globalAlpha=Math.min(.18,jump*.025);ctx.fillStyle='#e8ffe4';ctx.fillRect(0,0,width,height*.46);ctx.restore();}
+    drawBackground(time); drawWake(); drawThings(time);
+    for (const b of bubbles) { const p = screen(b.x, b.y); ctx.globalAlpha = Math.min(0.45, b.life * 0.6); ctx.strokeStyle = '#d3fff3'; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, scale * 0.07), 0, Math.PI * 2); ctx.stroke(); }
+    ctx.globalAlpha = 1; drawDolphin(time);
   }
+
+  function flick() {
+    if (state !== 'running') { if (state === 'ready' || state === 'over') newRun(); return; }
+    const before = wake.length;
+    while (wake.length > 2 && distance - wake[0].traveled > 5) wake.shift();
+    const removed = before - wake.length;
+    award(100 + removed * 5); showToast('TAIL FLICK · WAKE CLEARED +100');
+  }
+
   function pollGamepad() {
-    const controller = navigator.getGamepads?.().find(p => p && p.connected);
-    if (!controller) { pad.steer=0; pad.depth=0; pad.jump=false; pad.trick=false; pad.boost=false; pad.brake=false; return; }
-    const axis = n => { const value=controller.axes[n]||0; return Math.abs(value)<.18?0:value; };
-    const button = n => controller.buttons[n]?.pressed ?? false;
-    const jumpDown=button(0), trickDown=button(1);
-    if (jumpDown&&!pad.jump) { if (state==='running') leap(); else newRun(); }
-    if (trickDown&&!pad.trick&&jumpTime>.05) trick=Math.min(2,trick+1);
-    pad.jump=jumpDown; pad.trick=trickDown; pad.steer=axis(0); pad.depth=-axis(3); pad.boost=button(7)||button(3); pad.brake=button(6)||button(2);
+    const controller = navigator.getGamepads?.().find((p) => p && p.connected);
+    if (!controller) { pad.turn = 0; pad.boost = false; pad.brake = false; pad.flick = false; padFlick = false; return; }
+    const raw = controller.axes[0] || 0; pad.turn = Math.abs(raw) < 0.17 ? 0 : raw;
+    pad.boost = !!(controller.buttons[7]?.pressed || controller.buttons[5]?.pressed);
+    pad.brake = !!(controller.buttons[6]?.pressed || controller.buttons[4]?.pressed);
+    const flickDown = !!(controller.buttons[0]?.pressed || controller.buttons[2]?.pressed);
+    if (flickDown && !padFlick) flick();
+    padFlick = flickDown; pad.flick = flickDown;
   }
-  function frame(time) {const dt=Math.min(.05,Math.max(0,(time-last)/1000));last=time;pollGamepad();update(dt);render(time);raf=requestAnimationFrame(state==='running'?frame:menuFrame);}
-  function menuFrame(time) { pollGamepad(); if(state==='running') return; render(time); raf=requestAnimationFrame(menuFrame); }
-  function leap() {if(state==='running'&&jumpTime<=.05){jumpTime=1.25;jump=0;trick=0;}else if(state==='running'&&jumpTime>.05){trick=Math.min(2,trick+1);}}
-  const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'boost',KeyW:'boost',ArrowDown:'brake',KeyS:'brake',KeyE:'rise',KeyQ:'dive'};
-  window.addEventListener('keydown',e=>{if(keys[e.code]){held.add(keys[e.code]);e.preventDefault();}if(e.code==='Space'){e.preventDefault();if(!e.repeat)leap();}if(e.code==='ShiftLeft'&&!e.repeat&&jumpTime>.05)trick=Math.min(2,trick+1);if(e.code==='Enter'&&state!=='running')newRun();});
-  window.addEventListener('keyup',e=>{if(keys[e.code])held.delete(keys[e.code]);});
-  window.addEventListener('blur',()=>held.clear());
-  window.addEventListener('gamepadconnected',()=>{padConnected=true;toast('CONTROLLER READY · LEFT STICK / A TO LEAP');if(!raf)raf=requestAnimationFrame(menuFrame);});
-  window.addEventListener('gamepaddisconnected',()=>{padConnected=Array.from(navigator.getGamepads?.()||[]).some(p=>p&&p.connected);if(!padConnected)toast('CONTROLLER DISCONNECTED');});
-  game.querySelectorAll('[data-hold]').forEach(button=>{const key=button.dataset.hold;button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);held.add(key);button.classList.add('active');});const release=()=>{held.delete(key);button.classList.remove('active');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);});
-  ui['start-run'].addEventListener('click',newRun);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){held.clear();last=performance.now();}});
-  function finish() {state='over';if(distance>best){best=Math.floor(distance);localStorage.setItem('blueVelocityBest',String(best));ui['best-distance'].textContent=`${best} M`;}ui['game-message'].innerHTML=`<div class="message-stamp">CURRENT COMPLETE · RUN ${ui['run-seed'].textContent}</div><h2>${Math.floor(distance)}<br />metres.</h2><p>You scored ${Math.floor(score).toLocaleString()} points in the open blue.</p><button class="launch" id="start-run">SWIM AGAIN <span>↗</span></button><div class="best-line">PERSONAL BEST <b>${best} M</b></div>`;ui['game-message'].classList.remove('hidden');ui['start-run']=document.getElementById('start-run');ui['start-run'].addEventListener('click',newRun);}
-  state='ready';render(performance.now());raf=requestAnimationFrame(menuFrame);
+
+  function frame(time) {
+    const dt = Math.min(0.04, Math.max(0, (time - last) / 1000)); last = time;
+    pollGamepad(); update(dt); render(time);
+    raf = requestAnimationFrame(state === 'running' ? frame : menuFrame);
+  }
+  function menuFrame(time) { pollGamepad(); render(time); raf = requestAnimationFrame(state === 'running' ? frame : menuFrame); }
+
+  function finish(reason) {
+    state = 'over'; ui['tangle-flash'].classList.add('show');
+    const result = Math.floor(distance), total = Math.max(0, Math.floor(score));
+    ui['game-message'].innerHTML = `<div class="message-stamp">DIVE ENDED · RUN ${seed}</div><h2 class="tangle-title">Tangled<br />up.</h2><p>${reason}. You swam ${result.toLocaleString()} metres and scored ${total.toLocaleString()} points.</p><button class="launch" id="start-run">DIVE AGAIN <span>↗</span></button><div class="best-line">BEST DISTANCE <b>${best} M</b></div>`;
+    ui['game-message'].classList.remove('hidden'); ui['start-run'] = document.getElementById('start-run');
+    ui['start-run'].addEventListener('click', newRun); showToast(reason);
+  }
+
+  const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'boost', KeyW: 'boost', ArrowDown: 'brake', KeyS: 'brake' };
+  window.addEventListener('keydown', (event) => {
+    if (keyMap[event.code]) { held.add(keyMap[event.code]); event.preventDefault(); }
+    if (event.code === 'Space') { event.preventDefault(); if (!event.repeat) flick(); }
+    if (event.code === 'Enter' && state !== 'running') newRun();
+  });
+  window.addEventListener('keyup', (event) => { if (keyMap[event.code]) held.delete(keyMap[event.code]); });
+  window.addEventListener('blur', () => held.clear());
+  window.addEventListener('gamepadconnected', () => { showToast('CONTROLLER READY · LEFT STICK · A TAIL FLICK'); if (state !== 'running') raf = requestAnimationFrame(menuFrame); });
+  window.addEventListener('gamepaddisconnected', () => showToast('CONTROLLER DISCONNECTED'));
+  game.querySelectorAll('[data-hold]').forEach((button) => {
+    const action = button.dataset.hold;
+    button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); held.add(action); button.classList.add('active'); });
+    const release = () => { held.delete(action); button.classList.remove('active'); };
+    button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
+  });
+  game.querySelectorAll('[data-turn]').forEach((button) => {
+    const action = button.dataset.turn;
+    button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); held.add(action); button.classList.add('active'); });
+    const release = () => { held.delete(action); button.classList.remove('active'); };
+    button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
+  });
+  game.querySelector('[data-action="flick"]')?.addEventListener('click', flick);
+  ui['start-run'].addEventListener('click', newRun);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { held.clear(); last = performance.now(); } });
+  state = 'ready'; render(performance.now()); raf = requestAnimationFrame(menuFrame);
 }
