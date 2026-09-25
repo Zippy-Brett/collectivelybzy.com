@@ -17,7 +17,7 @@ if (canvas && game) {
   new ResizeObserver(resize).observe(canvas); resize();
   const project = (x, y, z) => {
     const focal = Math.min(width, height) * .9, scale = focal / (z + 5);
-    return { x: width * .5 + (x - playerX * .55) * scale, y: height * .46 + (0.2 - y) * scale, s: scale };
+    return { x: width * .5 + (x - playerX * .9) * scale * 1.7, y: height * .46 + (0.2 - y) * scale, s: scale };
   };
   function path(points, color, stroke, line = 1) {
     ctx.beginPath(); points.forEach((p, i) => { const q = project(p[0], p[1], p[2]); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
@@ -26,11 +26,11 @@ if (canvas && game) {
   function newRun() {
     run++; distance = 0; score = 0; speed = 28; playerX = 0; playerY = 0; lean = 0; jump = 0; jumpTime = 0; trick = 0; invuln = 1.4; hull = 0; seabedTimer = 0; ui.hits.querySelectorAll('i').forEach(i => i.classList.remove('lost')); things = []; particles = [];
     ui['run-seed'].textContent = String(Math.floor(Math.random() * 9000) + 1000); state = 'running'; ui['game-message'].classList.add('hidden'); last = performance.now();
-    for (let z = 30; z < 245; z += rand(15, 26)) spawn(z);
+    for (let z = 42; z < 250; z += rand(32, 44)) spawn(z);
     cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
   }
   function spawn(z) {
-    const lane = () => rand(-5.1, 5.1), type = Math.random();
+    const lane = () => rand(-8.2, 8.2), type = Math.random();
     let kind = type < .28 ? 'wreck' : type < .52 ? 'coral' : type < .7 ? 'net' : type < .86 ? 'ring' : Math.random() < .5 ? 'boost' : 'down';
     things.push({ kind, x: lane(), z, y: 0, wobble: rand(0, 6), hit: false, color: Math.random() });
   }
@@ -42,7 +42,7 @@ if (canvas && game) {
     const swim = Math.max(-1, Math.min(1, (held.has('rise') ? 1 : 0) - (held.has('dive') ? 1 : 0) + pad.depth));
     const boosting = (held.has('boost') || pad.boost) && speed > 14, braking = held.has('brake') || pad.brake;
     speed += (boosting ? 20 : braking ? -25 : 3.6) * dt; speed = Math.max(12, Math.min(61, speed));
-    playerX = Math.max(-5.2, Math.min(5.2, playerX + steer * dt * (3.7 + speed * .045))); playerY = Math.max(-1.25, Math.min(2.25, playerY + swim * dt * 3.8));
+    playerX = Math.max(-8.8, Math.min(8.8, playerX + steer * dt * (5.3 + speed * .07))); playerY = Math.max(-1.25, Math.min(2.25, playerY + swim * dt * 3.8));
     if (playerY < -.5) speed = Math.max(12, speed - 9 * dt);
     if (playerY < -.72) { seabedTimer += dt; if (seabedTimer > 2.1 && invuln <= 0) { seabedTimer = 0; hull++; invuln = 1; speed = Math.max(12, speed - 8); ui.hits.children[hull-1]?.classList.add('lost'); toast('SEAFLOOR SURGE · CLIMB'); if (hull >= 3) { finish(); return; } } } else seabedTimer = Math.max(0, seabedTimer - dt * 2);
     lean += (steer * .29 - lean) * Math.min(1, dt * 6);
@@ -54,7 +54,8 @@ if (canvas && game) {
     for (const t of things) {
       t.z -= speed * dt * .78;
       if (t.hit) continue;
-      const near = t.z < 8.5 && t.z > 1.2 && Math.abs(t.x - playerX) < (t.kind === 'ring' ? 1.2 : 1.25);
+      const collider = t.kind === 'wreck' ? 2.7 : t.kind === 'net' ? 1.7 : t.kind === 'ring' ? 1.2 : 1.25;
+      const near = t.z < 8.5 && t.z > 1.2 && Math.abs(t.x - playerX) < collider;
       const vertical = playerY + jump;
       if (t.kind === 'ring' && t.z < 18 && t.z > -1) { if (Math.abs(t.x-playerX)<1.2 && jump>5.3 && Math.abs(vertical-6.8)<2.1) { t.hit=true; addScore(650); toast('RING THREAD · +650'); } }
       else if (near && t.kind === 'boost') { t.hit=true; speed=Math.min(64,speed+16); addScore(180); toast('CURRENT SURGE · +180'); }
@@ -67,7 +68,10 @@ if (canvas && game) {
       if (t.z < 2 && !t.hit) { t.hit=true; if(t.kind==='ring') { addScore(30); } }
     }
     things = things.filter(t => t.z > -2);
-    while (things.length < 15) spawn(rand(155, 255));
+    while (things.length < 7) {
+      const farthest = things.reduce((max, item) => Math.max(max, item.z), 150);
+      spawn(farthest + rand(32, 44));
+    }
     invuln=Math.max(0,invuln-dt);cameraShake=Math.max(0,cameraShake-dt);
     ui.distance.textContent = Math.floor(distance).toLocaleString(); ui.score.textContent = String(Math.floor(score)).padStart(6,'0'); ui.speed.textContent = Math.floor(speed * 2.35); ui.depth.textContent = playerY < -.72 ? 'SEAFLOOR · CLIMB' : `DEPTH ${Math.max(0, 2.25-playerY).toFixed(1)} M`; ui['jump-fill'].style.width = `${Math.max(0,100-jumpTime/1.25*100)}%`;
     if (performance.now() > toastUntil) ui.toast.classList.remove('show');
@@ -114,7 +118,7 @@ if (canvas && game) {
     for(const p of particles){const q=project(p.x,p.y,p.z);ctx.globalAlpha=p.life/p.max;ctx.fillStyle='#e9ffd4';ctx.beginPath();ctx.arc(q.x,q.y,Math.max(1,q.s*.06),0,7);ctx.fill();}ctx.globalAlpha=1;
   }
   function drawDolphin(time) {
-    const cx=width*.5-lean*18,cy=height*.73-(jump+playerY)*Math.min(height*.055,38),scale=Math.min(width,height)*.115;ctx.save();ctx.translate(cx,cy);ctx.rotate(-lean*.22);ctx.scale(scale,scale);
+    const cx=width*.5+playerX*width*.025-lean*18,cy=height*.73-(jump+playerY)*Math.min(height*.055,38),scale=Math.min(width,height)*.115;ctx.save();ctx.translate(cx,cy);ctx.rotate(-lean*.22);ctx.scale(scale,scale);
     // A sculpted, three-quarter dolphin silhouette with a moonlit back and pale belly.
     const flick=Math.sin(time*.014)*.18;
     ctx.shadowColor='#00111e88';ctx.shadowBlur=30;ctx.shadowOffsetY=16;
