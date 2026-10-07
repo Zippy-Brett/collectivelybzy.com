@@ -1,0 +1,37 @@
+---
+import SplashPage from '../components/SplashPage.astro';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Collectively Bzy — Logo & splash preview</title>
+  </head>
+  <body>
+    <SplashPage />
+    <main>
+      <p class="eyebrow">A little studio. A lot of possibility.</p>
+      <img src="/images/collectively-bzy-logo.svg" alt="Collectively Bzy, by ZB — a honey-gold bee with crossed wings over a slate hexagon, accented with coral petals and sage leaves" width="800" height="600" />
+      <p class="caption">Apps, small adventures, and room to make.</p>
+      <div class="actions">
+        <a href="/splash-preview/">Replay the intro <span aria-hidden="true">↻</span></a>
+        <a href="/">Visit the hub <span aria-hidden="true">↗</span></a>
+      </div>
+    </main>
+    <style>
+      :global(*) { box-sizing: border-box; }
+      :global(body) { margin: 0; background: #1b2c30; color: #f7e5bd; font-family: system-ui, sans-serif; }
+      main { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.25rem; }
+      img { display: block; width: min(94vw, 760px); height: auto; }
+      .eyebrow { margin: 0; font-size: .66rem; letter-spacing: .19em; text-transform: uppercase; color: #a8bcb4; }
+      .caption { margin: 0 0 2rem; font-family: Georgia, serif; font-style: italic; color: #a8bcb4; font-size: 1rem; text-align: center; }
+      .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: .8rem; }
+      a { border: 1px solid #f7e5bd38; border-radius: 999px; padding: .8rem 1.1rem; color: #f7e5bd; text-decoration: none; font-size: .8rem; }
+      a span { color: #edc463; margin-left: .4rem; }
+      a:hover { background: #2b4246; }
+      a:focus-visible { outline: 2px solid #edc463; outline-offset: 4px; }
+    </style>
+  </body>
+</html>

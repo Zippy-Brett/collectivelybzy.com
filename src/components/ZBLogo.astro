@@ -1,0 +1,92 @@
+---
+/**
+ * Animated ZB mark — zero dependencies, designed for Astro.
+ * Pass `class` to size it with the parent layout.
+ */
+const { class: className = '' } = Astro.props;
+---
+
+<svg
+  class={`zb-logo ${className}`}
+  viewBox="0 0 480 300"
+  role="img"
+  aria-labelledby="zb-logo-title zb-logo-description"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title id="zb-logo-title">ZB honeybee logo</title>
+  <desc id="zb-logo-description">Two bees orbit a golden hive and weave the letters ZB from honey trails.</desc>
+
+  <defs>
+    <linearGradient id="honey" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1ad" />
+      <stop offset=".32" stop-color="#f8c64e" />
+      <stop offset=".7" stop-color="#d88712" />
+      <stop offset="1" stop-color="#8b4407" />
+    </linearGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff9dc" stop-opacity=".95" />
+      <stop offset="1" stop-color="#f5be4a" stop-opacity=".12" />
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <path id="orbit-one" d="M99 147c14-100 167-130 273-69 76 43 46 141-58 154-103 13-181-41-166-115 14-70 113-91 197-49" />
+    <path id="orbit-two" d="M385 123C357 27 193 28 109 97c-60 50-15 141 88 139 103-3 160-81 119-137-39-53-130-38-167 16" />
+  </defs>
+
+  <!-- The faint paths give the bees a refined, editorial flight pattern. -->
+  <g class="flight-guides" aria-hidden="true">
+    <use href="#orbit-one" />
+    <use href="#orbit-two" />
+  </g>
+
+  <!-- Honey strokes resolve into a deliberately hand-drawn Z and B. -->
+  <g class="monogram" aria-hidden="true">
+    <path class="z-stroke" pathLength="1" d="M134 93 C175 81 216 84 252 99 C214 128 176 155 140 199 C180 196 218 202 252 219" />
+    <path class="b-stroke" pathLength="1" d="M256 78 C239 129 240 177 249 226 M255 100 C289 79 325 90 327 118 C329 143 294 151 253 148 M254 151 C302 139 342 157 335 190 C329 217 285 224 249 207" />
+    <path class="weave" pathLength="1" d="M129 104 C162 108 191 100 219 93 M144 199 C181 186 207 170 245 151 M253 150 C284 148 310 145 328 126" />
+  </g>
+
+  <g class="hive" aria-hidden="true">
+    <animateTransform attributeName="transform" type="rotate" values="-3 240 151;3 240 151;-3 240 151" dur="5s" repeatCount="indefinite" />
+    <path d="M213 111 Q240 82 267 111 L276 136 Q284 164 265 194 Q240 221 215 194 Q196 164 204 136Z" fill="url(#honey)" stroke="#784007" stroke-width="3" />
+    <path d="M208 132h64M202 151h76M204 171h71M214 191h51" fill="none" stroke="#8c4a08" stroke-width="4" stroke-linecap="round" opacity=".72" />
+    <ellipse cx="240" cy="158" rx="9" ry="7" fill="#4b2607" />
+  </g>
+
+  <g class="bee bee-one" aria-hidden="true">
+    <animateMotion dur="6.5s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-one" /></animateMotion>
+    <path class="bee-wing wing-left" d="M-2-4C-24-28-37-8-18 4C-9 9-5 4-2-4Z" />
+    <path class="bee-wing wing-right" d="M3-4C22-29 39-9 19 5C10 10 5 4 3-4Z" />
+    <ellipse rx="11" ry="7" fill="#30200b" />
+    <path d="M-7-6v12M0-7v14M7-6v12" stroke="#f5bb31" stroke-width="4" />
+    <circle cx="10" cy="-2" r="3" fill="#30200b" />
+  </g>
+  <g class="bee bee-two" aria-hidden="true">
+    <animateMotion dur="7.5s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-two" /></animateMotion>
+    <path class="bee-wing wing-left" d="M-2-4C-24-28-37-8-18 4C-9 9-5 4-2-4Z" />
+    <path class="bee-wing wing-right" d="M3-4C22-29 39-9 19 5C10 10 5 4 3-4Z" />
+    <ellipse rx="11" ry="7" fill="#30200b" />
+    <path d="M-7-6v12M0-7v14M7-6v12" stroke="#f5bb31" stroke-width="4" />
+    <circle cx="10" cy="-2" r="3" fill="#30200b" />
+  </g>
+</svg>
+
+<style>
+  .zb-logo { display: block; width: min(100%, 30rem); height: auto; overflow: visible; }
+  .flight-guides use { fill: none; stroke: #e3a026; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 2 7; opacity: .3; }
+  .monogram path { fill: none; stroke: url(#honey); stroke-linecap: round; stroke-linejoin: round; filter: url(#glow); }
+  .z-stroke, .b-stroke { stroke-width: 8; stroke-dasharray: 1; animation: draw 2.3s cubic-bezier(.2,.8,.2,1) both; }
+  .b-stroke { animation-delay: .35s; }
+  .weave { stroke-width: 3; stroke-dasharray: 1; animation: draw 1.4s .9s both; }
+  .bee-wing { fill: url(#wing); stroke: #ba7a16; stroke-width: .8; transform-box: fill-box; transform-origin: center; animation: flutter .13s ease-in-out infinite alternate; }
+  .bee-two { animation: shimmer 1.2s ease-in-out infinite alternate; }
+  @keyframes draw { from { stroke-dashoffset: 1; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+  @keyframes flutter { to { transform: scaleY(.55) rotate(5deg); } }
+  @keyframes shimmer { to { opacity: .74; } }
+  @media (prefers-reduced-motion: reduce) {
+    .zb-logo *, .zb-logo { animation: none !important; }
+    .z-stroke, .b-stroke, .weave { stroke-dashoffset: 0; opacity: 1; }
+  }
+</style>

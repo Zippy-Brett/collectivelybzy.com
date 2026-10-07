@@ -4,11 +4,16 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "build": "astro build && node scripts/seo.mjs",
+    "preview": "astro preview",
+    "check": "npm run build && node scripts/test-cms.mjs && node scripts/verify-build.mjs"
   },
   "dependencies": {
     "@sanity/client": "^8.7.0",
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "gsap": "^3.15.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.7"
   }
 }

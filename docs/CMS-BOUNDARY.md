@@ -2,12 +2,13 @@
 
 This public site is intentionally separate from Scroll in Peace and its private infrastructure.
 
-## Planned CMS shape
+## CMS shape
 
-- Sanity Studio will eventually live at a separate address such as `cms.collectivelybzy.com`.
-- Editor login should be protected with MFA and Cloudflare Access.
-- Astro should consume published content only.
-- No Sanity write token belongs in this public frontend.
+- Storyblok is the selected CMS for the public site.
+- Astro reads Storyblok content through its read-only Content Delivery API.
+- Storyblok editor access, users, roles, and schema remain outside this public frontend.
+- Preview tokens belong only in local ignored environment files; they are never committed.
+- Editor login should use the CMS account's available security controls.
 - No `*.sip.collectivelybzy.com` address may be used by this project.
 
 ## Editorial safeguards
@@ -18,4 +19,4 @@ This public site is intentionally separate from Scroll in Peace and its private 
 - New game packages, origins, themes, and scripts require owner approval.
 - No arbitrary HTML, CSS, JavaScript, or public write endpoints are part of the public site.
 
-The current content in `src/data/content.ts` is local placeholder content. It is not connected to Sanity and contains no private service configuration.
+The current content in `src/data/content.ts` is the local catalog used when Storyblok is unconfigured. Once connected, Storyblok is authoritative for app, game, project, and store collections. Configured API failures stop the build. Temporary app-only merge mode is documented in RELEASE.md and must be removed after migration. Existing approved game package paths and music embed origins remain in source code.

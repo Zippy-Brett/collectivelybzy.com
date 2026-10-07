@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071923">
+<title>Ledge &amp; Ladder — Captain's Curse</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: #041018; color: #f8e9c0; font-family: ui-monospace, Menlo, Consolas, monospace; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  main { width: min(800px, 100%); min-width: 0; }
+  .stage { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border: 2px solid #85623d; border-radius: 12px; background: #071923; box-shadow: 0 20px 70px #0009, 0 0 0 5px #0e2931; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+  canvas:focus-visible { outline: 2px solid #f9cd67; outline-offset: -4px; }
+  .overlay { position: absolute; inset: 0; display: grid; place-items: center; align-items: safe center; overflow-y: auto; padding: 16px; background: #03141bcc; }
+  [hidden] { display: none !important; }
+  .card { width: min(520px, 100%); padding: clamp(16px, 4vw, 32px); text-align: center; border: 1px solid #ba9156; border-radius: 12px; background: linear-gradient(145deg, #123440, #081d27); box-shadow: 0 16px 50px #0008; }
+  .eyebrow { margin: 0 0 12px; color: #8fc9c8; font-size: 12px; letter-spacing: 3px; }
+  h1 { margin: 0; color: #ffd77d; font-size: clamp(25px, 5vw, 44px); line-height: 1.05; text-shadow: 3px 3px #624124; }
+  h2 { margin: 0 0 14px; color: #ffd77d; font-size: clamp(24px, 4vw, 36px); }
+  p { font-size: clamp(11px, 2vw, 14px); line-height: 1.6; }
+  .rules { text-align: left; color: #d5e6df; }
+  .rules b { color: #ffdc88; }
+  #startScreen .card { padding: 20px 26px; }
+  #startScreen .rules { font-size: 12px; line-height: 1.5; }
+  .intro { margin: 10px 0; font-size: 13px; }
+  .input-guide { margin: 12px 0 18px; padding: 10px 12px; border: 1px solid #456d72; border-radius: 6px; background: #071d28; text-align: left; font-size: 11px; line-height: 1.7; color: #d5e6df; }
+  .input-guide p { margin: 0; font: inherit; }
+  .input-guide b { color: #ffdc88; }
+  button { font: inherit; cursor: pointer; touch-action: manipulation; }
+  .primary { padding: 12px 30px; border: 0; border-radius: 6px; background: #ffd077; color: #251b16; font-weight: 900; box-shadow: 0 4px 0 #926034; }
+  .secondary { padding: 12px 18px; border: 1px solid #7caaa9; border-radius: 6px; background: #153440; color: #e4e9cf; }
+  .menu-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; }
+  button.controller-focus { outline: 3px solid #fff0b8; outline-offset: 4px; }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+  .small { font-size: 11px; color: #96b5b5; }
+  #pauseButton { position: absolute; top: 10px; right: 10px; padding: 6px 9px; border: 1px solid #647b7a; background: #0c2633; color: #e9dbaf; border-radius: 4px; font-size: 12px; }
+  .stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 26px; margin: 20px 0; }
+  .stats span { display: block; color: #94bfbe; font-size: 11px; margin-bottom: 6px; }
+  .stats strong { color: #ffd77d; font-size: 25px; }
+  .controls { display: none; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; user-select: none; -webkit-user-select: none; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(2, 44px); gap: 5px; }
+  .controls button { border: 1px solid #688b8b; border-radius: 8px; background: #153640; color: #ffe0a0; font-size: 21px; touch-action: none; }
+  .controls button.pressed { background: #99692e; }
+  [data-key="ArrowUp"] { grid-column: 2; }
+  [data-key="ArrowLeft"] { grid-column: 1; grid-row: 2; }
+  [data-key="ArrowDown"] { grid-column: 2; grid-row: 2; }
+  [data-key="ArrowRight"] { grid-column: 3; grid-row: 2; }
+  .controls .jump { width: 90px; height: 70px; font-size: 16px; font-weight: bold; }
+  .caption { text-align: center; margin: 14px 0 0; color: #88abaa; font-size: 11px; }
+  @media (any-pointer: coarse) { .controls { display: flex; } }
+  @media (max-width: 480px) { .card, #startScreen .card { padding: 12px; } .card .eyebrow, #startScreen .card > p:nth-of-type(2) { display: none; } .rules, #startScreen .rules { margin: 9px 0; font-size: 10px; line-height: 1.5; } .input-guide { margin: 9px 0 12px; padding: 8px; font-size: 10px; } .primary { padding: 9px 24px; } .card .small { margin: 8px 0 0; font-size: 9px; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage">
+    <canvas id="game" width="800" height="600" tabindex="0" aria-label="Ledge and Ladder pirate game. Arrow keys to move and climb, Space to jump, P or Escape to pause."></canvas>
+    <button id="pauseButton" aria-label="Pause game" hidden>Ⅱ</button>
+    <section id="startScreen" class="overlay" aria-labelledby="title">
+      <div class="card">
+        <p class="eyebrow">CAPTAIN'S CURSE · ARCADE SURVIVAL</p>
+        <h1 id="title">LEDGE &amp; LADDER</h1>
+        <p class="intro">Four chests. A haunted ship. A fortune to plunder.</p>
+        <p class="rules">Walk across chests to drop them; land all four in the hold.<br>Crush skeletons riding a chest or in its marked drop zone.<br>Jump over ghosts; step off ladders at deck junctions.<br><b>Rum:</b> 5s speed. <b>Citrus:</b> 4s slow + reversed steering.</p>
+        <div class="input-guide" aria-label="Keyboard and controller instructions">
+          <p><b>Keyboard:</b> Arrows move / climb · Space jump · P / Esc pause</p>
+          <p><b>Controller:</b> Left stick / D-pad move, climb &amp; select menus</p>
+          <p><b>A / Cross:</b> Jump / confirm · <b>Start / Options:</b> Pause / resume</p>
+          <p><b>B / Circle:</b> Back · Also pauses / resumes during a voyage</p>
+        </div>
+        <button id="playButton" class="primary">Play</button>
+        <p class="small">3 lives · Endless waves · P / Esc to pause<br>Best haul: <span id="startBest">0</span></p>
+      </div>
+    </section>
+    <section id="pauseScreen" class="overlay" aria-labelledby="pauseTitle" hidden>
+      <div class="card"><p class="eyebrow">ANCHOR DROPPED</p><h2 id="pauseTitle">Paused</h2><p>Your voyage will wait.</p>
+        <div class="input-guide" aria-label="Keyboard and controller instructions">
+          <p><b>Keyboard:</b> Arrows move / climb · Space jump · P / Esc resume</p>
+          <p><b>Controller:</b> Left stick / D-pad move, climb &amp; select menus</p>
+          <p><b>A / Cross:</b> Jump / confirm · <b>Start / Options:</b> Pause / resume</p>
+          <p><b>B / Circle:</b> Back / resume from pause</p>
+        </div>
+        <div class="menu-actions"><button id="resumeButton" class="primary">Resume</button><button id="pauseMenuButton" class="secondary">Main Menu</button></div>
+      </div>
+    </section>
+    <section id="overScreen" class="overlay" aria-labelledby="overTitle" hidden>
+      <div class="card">
+        <p class="eyebrow">THE SEA CLAIMS ANOTHER CAPTAIN</p><h2 id="overTitle">Game Over</h2>
+        <div class="stats"><div><span>FINAL SCORE</span><strong id="finalScore">0</strong></div><div><span>WAVE REACHED</span><strong id="finalWave">1</strong></div><div><span>HIGH SCORE</span><strong id="finalBest">0</strong></div></div>
+        <p id="recordMessage" aria-live="polite"></p>
+        <p class="small">Controller: Stick / D-pad select · A / Cross confirm<br>B / Circle returns to the main menu</p>
+        <div class="menu-actions"><button id="againButton" class="primary">Plunder Again</button><button id="overMenuButton" class="secondary">Main Menu</button></div>
+      </div>
+    </section>
+  </div>
+  <div class="controls" aria-label="Touch game controls">
+    <div class="dpad"><button data-key="ArrowUp" aria-label="Climb up">↑</button><button data-key="ArrowLeft" aria-label="Walk left">←</button><button data-key="ArrowDown" aria-label="Climb down">↓</button><button data-key="ArrowRight" aria-label="Walk right">→</button></div>
+    <button class="jump" data-key="Space" aria-label="Jump">JUMP</button>
+  </div>
+  <p class="caption">WALK THE CHESTS · WORK THE RIGGING · WATCH YOUR BACK</p>
+  <p id="controllerStatus" class="caption" role="status">Controller: connect and press a button · Stick / D-pad: move · A / Cross: jump / confirm · Start / Options: pause · B / Circle: back</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const W = 800, H = 600;
+  const DECKS = [160, 250, 340, 430, 520];
+  const ROPES = [112, 304, 496, 688];
+  const CHEST_X = [202, 334, 466, 598];
+  const LEFT = 44, RIGHT = 756, CHEST_HALF = 45;
+  const ROPE_GRAB = 18, DECK_EXIT = 12, SKELETON_SPEED = 64;
+  const SAVE_KEY = 'ledge-and-ladder.high-score.v1';
+  const STEP = 1 / 120;
+  const keyboard = new Set(), pointers = new Map(), padKeys = new Set();
+  let padIdentity = null, padPrevious = {}, menuIndex = 0, menuRepeat = 0, controllerMessage = '', padMenuScreen = null;
+  let state = 'start', player, chests = [], enemies = [], items = [], particles = [], popups = [];
+  let score = 0, wave = 1, lives = 3, elapsed = 0, nextRum = 20, nextCitrus = 0;
+  let waveDelay = 0, waveNotice = 0, jumpQueued = false, best = 0, startingBest = 0;
+  let respawns = [];
+  let lastFrame = 0, accumulator = 0, animationTime = 0;
+  let storageWorks = true;
+  try {
+    const saved = Number(localStorage.getItem(SAVE_KEY));
+    best = Number.isSafeInteger(saved) && saved >= 0 ? saved : 0;
+  } catch (_) { storageWorks = false; }
+  $('startBest').textContent = best.toLocaleString();
+  const random = (min, max) => min + Math.random() * (max - min);
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const down = key => keyboard.has(key) || padKeys.has(key) || [...pointers.values()].includes(key);
+
+  function saveBest() {
+    if (score <= best) return;
+    best = score;
+    try { localStorage.setItem(SAVE_KEY, String(best)); }
+    catch (_) { storageWorks = false; }
+  }
+  function award(points, x, y, label) {
+    score += points;
+    saveBest();
+    popups.push({ x, y, text: label || '+' + points, ttl: 1.4 });
+  }
+  function clearInput() {
+    keyboard.clear(); pointers.clear(); padKeys.clear(); jumpQueued = false;
+    document.querySelectorAll('[data-key]').forEach(b => b.classList.remove('pressed'));
+  }
+  function setScreen(next) {
+    state = next; clearInput(); accumulator = 0; menuIndex = 0; menuRepeat = 0; padMenuScreen = null;
+    document.querySelectorAll('.controller-focus').forEach(b => b.classList.remove('controller-focus'));
+    $('startScreen').hidden = next !== 'start';
+    $('pauseScreen').hidden = next !== 'paused';
+    $('overScreen').hidden = next !== 'over';
+    $('pauseButton').hidden = next !== 'playing';
+    if (next === 'playing') canvas.focus({ preventScroll: true });
+    if (next === 'paused') $('resumeButton').focus({ preventScroll: true });
+    if (next === 'over') $('againButton').focus({ preventScroll: true });
+    if (next === 'start') $('playButton').focus({ preventScroll: true });
+  }
+  function captain() {
+    return { x: 64, y: DECKS[0], deck: 0, mode: 'ground', vy: 0,
+      facing: 1, invincible: 2, rum: 0, citrus: 0, gait: 0, low: 0, high: 0,
+      ropeLock: null, lastHorizontal: 0, entryDeck: 0, leftJunction: false };
+  }
+  function safeSpawn() {
+    // Uniformly choose among eligible deck regions, excluding the captain's vicinity.
+    const regions = [];
+    for (let d = 0; d < DECKS.length; d++) {
+      const dy = DECKS[d] - player.y;
+      const exclusion = Math.sqrt(Math.max(0, 140 * 140 - dy * dy));
+      if (!exclusion) regions.push({ d, a: LEFT + 12, b: RIGHT - 12 });
+      else {
+        if (player.x - exclusion > LEFT + 12) regions.push({ d, a: LEFT + 12, b: Math.min(RIGHT - 12, player.x - exclusion) });
+        if (player.x + exclusion < RIGHT - 12) regions.push({ d, a: Math.max(LEFT + 12, player.x + exclusion), b: RIGHT - 12 });
+      }
+    }
+    let ticket = random(0, regions.reduce((sum, r) => sum + r.b - r.a, 0));
+    for (const r of regions) {
+      ticket -= r.b - r.a;
+      if (ticket <= 0) return { x: random(r.a, r.b), deck: r.d };
+    }
+    const r = regions[regions.length - 1];
+    return { x: random(r.a, r.b), deck: r.d };
+  }
+  function beginWave() {
+    player = captain(); items = []; particles = []; popups = []; respawns = [];
+    waveDelay = 0; waveNotice = 2;
+    chests = CHEST_X.map(x => ({ x, y: DECKS[0], deck: 0, falling: false, entry: 0, progress: 0, riders: [] }));
+    enemies = Array.from({ length: 2 + wave }, () => makeSkeleton());
+  }
+  function makeSkeleton(returning = false) {
+    const spawn = safeSpawn();
+    return { x: spawn.x, y: DECKS[spawn.deck], deck: spawn.deck, mode: 'ground',
+      dir: Math.random() < 0.5 ? -1 : 1, speed: SKELETON_SPEED * Math.pow(1.15, wave - 1),
+      turn: random(0.1, 0.7), climbCooldown: random(0.1, 0.7), gait: random(0, 6),
+      dead: false, trapped: false, spawnGrace: returning ? 0.8 : 0, goalRope: null };
+  }
+  function mainMenu() {
+    saveBest(); $('startBest').textContent = best.toLocaleString(); setScreen('start');
+  }
+  function startGame() {
+    score = 0; wave = 1; lives = 3; elapsed = 0; nextRum = 20;
+    nextCitrus = random(9, 17); startingBest = best;
+    beginWave(); setScreen('playing');
+  }
+  function gameOver() {
+    saveBest();
+    $('finalScore').textContent = score.toLocaleString();
+    $('finalWave').textContent = wave;
+    $('finalBest').textContent = best.toLocaleString();
+    $('recordMessage').textContent = (score > startingBest ? 'A new legendary haul!' : 'The treasure awaits your return.') +
+      (storageWorks ? '' : ' High score is kept for this session; browser storage is unavailable.');
+    setScreen('over');
+  }
+  function burst(x, y, color, count = 16) {
+    for (let i = 0; i < count; i++) particles.push({ x, y, vx: random(-95, 95), vy: random(-135, -25), color, ttl: random(0.3, 0.75) });
+  }
+  function climbStart(actor, vertical, fromX = actor.x) {
+    const tolerance = actor === player ? ROPE_GRAB : 5;
+    const rope = ROPES.find(x => x !== actor.ropeLock &&
+      (Math.abs(actor.x - x) <= tolerance || (fromX !== actor.x && (fromX - x) * (actor.x - x) <= 0)));
+    const target = actor.deck + vertical;
+    if (rope === undefined || target < 0 || target >= DECKS.length) return false;
+    actor.x = rope; // Align first: every vertical movement occurs exactly on the rope.
+    actor.low = Math.max(actor.deck, target);
+    actor.high = Math.min(actor.deck, target);
+    actor.entryDeck = actor.deck; actor.leftJunction = false;
+    actor.mode = 'climb';
+    return true;
+  }
+  function climbMove(actor, vertical, speed, dt) {
+    actor.y += vertical * speed * dt;
+    if (actor.y <= DECKS[actor.high]) {
+      actor.deck = actor.high; actor.y = DECKS[actor.deck]; actor.mode = 'ground';
+    } else if (actor.y >= DECKS[actor.low]) {
+      actor.deck = actor.low; actor.y = DECKS[actor.deck]; actor.mode = 'ground';
+    }
+  }
+  function updatePlayer(dt) {
+    const p = player;
+    p.invincible = Math.max(0, p.invincible - dt);
+    p.rum = Math.max(0, p.rum - dt); p.citrus = Math.max(0, p.citrus - dt);
+    let horizontal = Number(down('ArrowRight')) - Number(down('ArrowLeft'));
+    const vertical = Number(down('ArrowDown')) - Number(down('ArrowUp'));
+    if (p.citrus > 0) horizontal *= -1;
+    const newHorizontal = horizontal && horizontal !== p.lastHorizontal;
+    p.lastHorizontal = horizontal;
+    const speed = 128 * (p.rum > 0 ? 1.8 : 1) * (p.citrus > 0 ? 0.7 : 1);
+    const previousX = p.x, wasGrounded = p.mode === 'ground';
+    if (!vertical || (p.ropeLock !== null && Math.abs(p.x - p.ropeLock) > ROPE_GRAB + 4)) p.ropeLock = null;
+    if (jumpQueued && wasGrounded) { p.mode = 'jump'; p.vy = -330; }
+    jumpQueued = false;
+    if (p.mode === 'climb') {
+      if (Math.abs(p.y - DECKS[p.entryDeck]) > DECK_EXIT) p.leftJunction = true;
+      const junction = DECKS.findIndex(y => Math.abs(p.y - y) <= DECK_EXIT);
+      if (horizontal && junction >= 0 && (p.leftJunction || newHorizontal || !vertical)) {
+        // Horizontal intent wins at a deck and blocks immediate rope re-entry.
+        p.ropeLock = p.x; p.deck = junction; p.y = DECKS[junction]; p.mode = 'ground';
+      }
+    }
+    if (p.mode === 'climb') {
+      climbMove(p, vertical, speed, dt);
+      if (vertical) p.gait += dt * 12;
+      if (p.mode === 'ground' && horizontal) {
+        p.ropeLock = p.x; p.x = clamp(p.x + horizontal * speed * dt, LEFT, RIGHT); p.facing = horizontal;
+      }
+    } else {
+      p.x = clamp(p.x + horizontal * speed * dt, LEFT, RIGHT);
+      if (horizontal) { p.facing = horizontal; p.gait += dt * speed / 10; }
+      if (p.mode === 'ground' && vertical && climbStart(p, vertical, previousX)) {
+        climbMove(p, vertical, speed, dt);
+      }
+      if (p.mode === 'jump') {
+        p.vy += 800 * dt; p.y += p.vy * dt;
+        if (p.vy > 0 && p.y >= DECKS[p.deck]) {
+          p.y = DECKS[p.deck]; p.vy = 0; p.mode = 'ground';
+        }
+      }
+    }
+    for (const c of chests) {
+      if (c.falling || c.deck === DECKS.length - 1) continue;
+      if (!wasGrounded || p.mode !== 'ground' || p.deck !== c.deck) { c.entry = 0; c.progress = 0; continue; }
+      const a = c.x - CHEST_HALF, b = c.x + CHEST_HALF;
+      if (!c.entry) {
+        if (previousX <= a && p.x > a) c.entry = 1;
+        else if (previousX >= b && p.x < b) c.entry = -1;
+      }
+      if (!c.entry) continue;
+      c.progress = Math.max(c.progress, clamp(c.entry === 1 ? (p.x - a) / (b - a) : (b - p.x) / (b - a), 0, 1));
+      if ((c.entry === 1 && p.x >= b) || (c.entry === -1 && p.x <= a)) {
+        dropChest(c);
+      } else if ((c.entry === 1 && p.x <= a) || (c.entry === -1 && p.x >= b)) {
+        c.entry = 0; c.progress = 0;
+      }
+    }
+  }
+  function dropChest(c) {
+    c.falling = true; c.entry = 0; c.progress = 0; c.dropDelay = 0.18;
+    c.riders = enemies.filter(e => !e.dead && !e.trapped && e.mode === 'ground' &&
+      e.deck === c.deck && Math.abs(e.x - c.x) <= CHEST_HALF + 8);
+    for (const e of c.riders) e.trapped = true;
+    if (c.riders.length) popups.push({ x: c.x, y: c.y - 57, text: 'CAUGHT!', ttl: 0.8 });
+    award(100, c.x, c.y - 38); burst(c.x, c.y - 8, '#ffc96b', 8);
+  }
+  function crush(e) {
+    if (e.dead) return;
+    e.dead = true; award(250, e.x, e.y - 40, 'CRUSH +250'); burst(e.x, e.y - 20, '#a2f4df');
+    respawns.push(6);
+  }
+  function updateRespawns(dt) {
+    respawns = respawns.map(t => t - dt);
+    for (const t of respawns) {
+      if (t <= 0 && enemies.length < 2 + wave) {
+        const e = makeSkeleton(true); enemies.push(e); burst(e.x, e.y - 20, '#a2f4df', 8);
+      }
+    }
+    respawns = respawns.filter(t => t > 0);
+  }
+  function planSkeleton(e) {
+    e.turn = random(0.55, 1.3); e.goalRope = null;
+    if (Math.random() < 0.75) {
+      if (e.deck === player.deck) e.dir = Math.sign(player.x - e.x) || e.dir;
+      else {
+        e.goalRope = ROPES.reduce((best, x) =>
+          Math.abs(e.x - x) + 0.7 * Math.abs(player.x - x) < Math.abs(e.x - best) + 0.7 * Math.abs(player.x - best) ? x : best);
+        e.dir = Math.sign(e.goalRope - e.x) || e.dir;
+      }
+    } else e.dir = Math.random() < 0.5 ? -1 : 1;
+  }
+  function updateEnemies(dt) {
+    for (const e of enemies) {
+      if (e.dead || e.trapped) continue;
+      e.spawnGrace = Math.max(0, (e.spawnGrace || 0) - dt);
+      e.gait += dt * e.speed / 9;
+      e.climbCooldown -= dt;
+      if (e.mode === 'climb') {
+        climbMove(e, e.vertical, e.speed * 0.8, dt);
+        if (e.mode === 'ground') e.climbCooldown = random(1.3, 3.5);
+        continue;
+      }
+      e.turn -= dt;
+      if (e.turn <= 0) planSkeleton(e);
+      const oldX = e.x;
+      e.x = clamp(e.x + e.dir * e.speed * dt, LEFT, RIGHT);
+      if (e.x <= LEFT || e.x >= RIGHT) e.dir *= -1;
+      for (const rope of ROPES) {
+        if (e.climbCooldown > 0 || (oldX - rope) * (e.x - rope) > 0 || oldX === e.x) continue;
+        e.climbCooldown = random(0.8, 2);
+        const hunting = e.goalRope === rope && e.deck !== player.deck;
+        if (hunting || Math.random() < 0.3) {
+          const options = [];
+          if (e.deck > 0) options.push(-1);
+          if (e.deck < DECKS.length - 1) options.push(1);
+          e.x = rope; e.vertical = hunting ? Math.sign(player.deck - e.deck) : pick(options); climbStart(e, e.vertical);
+        }
+        break;
+      }
+    }
+  }
+  function updateChests(dt) {
+    for (const c of chests) {
+      if (!c.falling) continue;
+      c.dropDelay = Math.max(0, (c.dropDelay || 0) - dt);
+      if (c.dropDelay > 0) continue;
+      const oldY = c.y;
+      c.y = Math.min(c.y + 365 * dt, DECKS[c.deck + 1]);
+      for (const e of c.riders) e.y = c.y;
+      for (const e of enemies) {
+        if (e.dead || e.trapped || e.y <= DECKS[c.deck] + 4 || Math.abs(e.x - c.x) > CHEST_HALF + 10) continue;
+        if (c.y >= e.y - 32 && oldY - 25 <= e.y - 3) {
+          crush(e);
+        }
+      }
+      if (c.y >= DECKS[c.deck + 1]) {
+        c.riders.forEach(crush); c.riders = [];
+        c.deck++; c.falling = false; burst(c.x, c.y - 3, '#b38a58', 7);
+      }
+    }
+    enemies = enemies.filter(e => !e.dead);
+    if (!waveDelay && chests.every(c => c.deck === DECKS.length - 1 && !c.falling)) {
+      award(1000, W / 2, 116, 'WAVE CLEARED +1000'); waveDelay = 1.8;
+    }
+  }
+  function spawnItem(type) {
+    const deck = Math.floor(random(0, DECKS.length));
+    items.push({ type, deck, x: random(LEFT + 20, RIGHT - 20), y: DECKS[deck], ttl: 15, phase: random(0, 6) });
+  }
+  function updateItems(dt) {
+    elapsed += dt;
+    while (elapsed >= nextRum) { spawnItem('rum'); nextRum += 20; }
+    if (elapsed >= nextCitrus) { spawnItem('citrus'); nextCitrus = elapsed + random(9, 18); }
+    for (const item of items) {
+      item.ttl -= dt;
+      if (Math.abs(player.x - item.x) < 22 && Math.abs(player.y - item.y) < 25) {
+        item.ttl = 0;
+        if (item.type === 'rum') { player.rum = 5; popups.push({ x: item.x, y: item.y - 40, text: 'SUPER SPEED!', ttl: 1.4 }); }
+        else { player.citrus = 4; popups.push({ x: item.x, y: item.y - 40, text: 'SCURVY! REVERSED', ttl: 1.4 }); }
+        burst(item.x, item.y - 15, item.type === 'rum' ? '#ffdd75' : '#aeed67', 10);
+      }
+    }
+    items = items.filter(item => item.ttl > 0);
+  }
+  function updateEffects(dt) {
+    for (const p of particles) { p.ttl -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 280 * dt; }
+    particles = particles.filter(p => p.ttl > 0);
+    for (const p of popups) { p.ttl -= dt; p.y -= 24 * dt; }
+    popups = popups.filter(p => p.ttl > 0);
+  }
+  function update(dt) {
+    if (state !== 'playing') return;
+    updateEffects(dt); waveNotice = Math.max(0, waveNotice - dt);
+    if (waveDelay > 0) {
+      waveDelay -= dt;
+      if (waveDelay <= 0) { wave++; clearInput(); beginWave(); }
+      return;
+    }
+    updatePlayer(dt); updateEnemies(dt); updateChests(dt);
+    if (waveDelay > 0) return;
+    updateRespawns(dt);
+    updateItems(dt);
+    if (player.invincible <= 0) {
+      for (const e of enemies) {
+        if (!e.trapped && !e.dead && !e.spawnGrace && touchingSkeleton(player, e)) {
+          lives--; player.invincible = 2;
+          burst(player.x, player.y - 18, '#ff947d');
+          popups.push({ x: player.x, y: player.y - 46, text: '-1 LIFE', ttl: 1.4 });
+          if (lives <= 0) gameOver();
+          break;
+        }
+      }
+    }
+  }
+  function touchingSkeleton(p, e) {
+    return Math.abs(p.x - e.x) < 21 && p.y - 3 > e.y - 34 && p.y - 36 < e.y - 3;
+  }
+
+  function rect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); }
+  function line(x1, y1, x2, y2, color, width = 2) {
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+  function circle(x, y, radius, color) {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+  }
+  function text(value, x, y, color = '#f9e8bd', size = 14, align = 'left') {
+    ctx.fillStyle = color; ctx.font = 'bold ' + size + 'px monospace'; ctx.textAlign = align; ctx.fillText(value, x, y);
+  }
+  function background(t) {
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#061721'); sky.addColorStop(0.7, '#113742'); sky.addColorStop(1, '#08222e');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 44; i++) circle((i * 137 + 31) % W, 77 + (i * 37) % 400, i % 3 ? 1 : 1.6, '#82b7bb40');
+    circle(725, 103, 23, '#adc9bc'); circle(716, 96, 23, '#0a202b');
+    rect(389, 94, 22, 450, '#193e4260');
+    ctx.fillStyle = '#183944'; ctx.beginPath(); ctx.moveTo(402, 93); ctx.lineTo(565, 126); ctx.lineTo(402, 139); ctx.fill();
+    for (let layer = 0; layer < 3; layer++) {
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 10) ctx.lineTo(x, 553 + layer * 17 + Math.sin(x / 43 + t * (0.6 + layer * 0.2)) * 5);
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fillStyle = ['#164551', '#103542', '#092935'][layer]; ctx.fill();
+    }
+    line(28, 129, 28, 539, '#755936', 8); line(772, 129, 772, 539, '#755936', 8);
+    for (const x of ROPES) {
+      if (player && state === 'playing' && Math.abs(player.x - x) <= ROPE_GRAB) {
+        line(x, Math.max(DECKS[0], player.y - 35), x, Math.min(DECKS[4], player.y + 35), '#ffd77d30', 25);
+      }
+      line(x - 7, DECKS[0] - 13, x - 7, DECKS[4] + 3, '#9b8355', 3);
+      line(x + 7, DECKS[0] - 13, x + 7, DECKS[4] + 3, '#9b8355', 3);
+      for (let y = DECKS[0] - 8; y < DECKS[4]; y += 13) line(x - 8, y, x + 8, y, '#bfa674', 2);
+    }
+    for (let d = 0; d < DECKS.length; d++) {
+      const y = DECKS[d];
+      rect(28, y, 744, 14, '#5b3b2b'); rect(28, y, 744, 3, '#b18551'); rect(28, y + 11, 744, 3, '#342a25');
+      for (let x = 40; x < 766; x += 52) { line(x, y + 4, x + 38, y + 4, '#785337', 1); rect(x + 43, y + 5, 2, 4, '#251e1a'); }
+      text(d === 4 ? 'HOLD' : '0' + (d + 1), 16, y - 8, '#72979b', 10, 'center');
+    }
+  }
+  function drawDropZone(c) {
+    if (c.deck === DECKS.length - 1 || (!c.entry && !c.falling)) return;
+    const targetY = DECKS[c.deck + 1];
+    const targeted = enemies.some(e => !e.dead && !e.trapped && e.y > DECKS[c.deck] + 4 &&
+      e.y <= targetY && Math.abs(e.x - c.x) <= CHEST_HALF + 10);
+    const color = targeted ? '#ffad7b' : '#e1bc70';
+    ctx.save(); ctx.globalAlpha = 0.12;
+    rect(c.x - CHEST_HALF, c.y + 15, CHEST_HALF * 2, Math.max(0, targetY - c.y - 15), color);
+    ctx.globalAlpha = 0.8; ctx.setLineDash([4, 5]);
+    line(c.x - CHEST_HALF, c.y + 15, c.x - CHEST_HALF, targetY - 3, color, 1);
+    line(c.x + CHEST_HALF, c.y + 15, c.x + CHEST_HALF, targetY - 3, color, 1);
+    ctx.setLineDash([]); line(c.x - CHEST_HALF, targetY - 2, c.x + CHEST_HALF, targetY - 2, color, 3);
+    text(targeted ? 'CRUSH TARGET' : 'DROP ZONE', c.x, targetY - 43, color, 10, 'center');
+    ctx.restore();
+  }
+  function drawChest(c) {
+    const x = c.x - CHEST_HALF, y = c.y;
+    ctx.save();
+    if (c.falling) { ctx.translate(c.x, y - 12); ctx.rotate(Math.sin(animationTime * 25) * 0.035); ctx.translate(-c.x, -(y - 12)); }
+    rect(x, y - 25, 90, 24, '#352823'); rect(x + 2, y - 23, 86, 19, '#916030');
+    rect(x + 2, y - 23, 86, 6, '#bf8a44'); line(x + 2, y - 14, x + 88, y - 14, '#4b3326', 2);
+    for (let i = 0; i < 9; i++) {
+      const filled = c.entry === 1 ? i / 9 < c.progress : c.entry === -1 && (8 - i) / 9 < c.progress;
+      rect(x + 3 + i * 9.5, y - 27, 8, 4, c.deck === 4 ? '#ffe09b' : filled ? '#ffe09b' : '#9b7946');
+    }
+    rect(x + 12, y - 23, 6, 20, '#e3b864'); rect(x + 72, y - 23, 6, 20, '#e3b864');
+    rect(c.x - 6, y - 17, 12, 11, '#f3cd75'); rect(c.x - 1, y - 14, 3, 5, '#56462e');
+    ctx.restore();
+  }
+  function drawCaptain(p) {
+    if (p.invincible > 0 && Math.floor(p.invincible * 12) % 2) return;
+    const x = p.x, y = p.y, swing = Math.sin(p.gait) * 4;
+    const coat = p.rum > 0 ? '#ffd675' : p.citrus > 0 ? '#829653' : '#d57655';
+    if (p.rum > 0) circle(x, y - 18, 24, '#ffd66a25');
+    line(x - 5, y - 11, x - 6 + swing, y - 2, '#19252e', 5);
+    line(x + 5, y - 11, x + 6 - swing, y - 2, '#19252e', 5);
+    rect(x - 11 + swing, y - 4, 9, 4, '#d9c099'); rect(x + 2 - swing, y - 4, 9, 4, '#d9c099');
+    rect(x - 9, y - 24, 18, 15, coat); rect(x - 9, y - 12, 18, 3, '#49352c'); rect(x - 2, y - 12, 4, 3, '#ffdb87');
+    line(x - 9, y - 22, x - 13, y - 13 + (p.mode === 'climb' ? swing : 0), coat, 5);
+    line(x + 9, y - 22, x + 13, y - 13 - (p.mode === 'climb' ? swing : 0), coat, 5);
+    circle(x, y - 31, 9, '#edbc8d'); rect(x - 8, y - 27, 16, 5, '#694432');
+    rect(x - 9, y - 36, 18, 3, '#c86246'); rect(x + p.facing * 3 - 2, y - 33, 4, 4, '#15252c');
+    ctx.fillStyle = p.rum > 0 ? '#e8b856' : '#202b30'; ctx.beginPath();
+    ctx.moveTo(x - 17, y - 36); ctx.lineTo(x - 10, y - 45); ctx.lineTo(x, y - 40);
+    ctx.lineTo(x + 10, y - 45); ctx.lineTo(x + 17, y - 36); ctx.closePath(); ctx.fill();
+    rect(x - 3, y - 40, 6, 4, '#f5e7bd');
+  }
+  function drawSkeleton(e) {
+    const x = e.x, y = e.y, swing = Math.sin(e.gait) * 4;
+    ctx.save(); ctx.globalAlpha = e.spawnGrace > 0 ? 0.35 : 0.83;
+    if (e.trapped) circle(x, y - 18, 24, '#ffc66b55');
+    circle(x, y - 18, 22, '#8fe8d012');
+    line(x - 4, y - 10, x - 6 + swing, y - 2, '#a3decd', 3);
+    line(x + 4, y - 10, x + 6 - swing, y - 2, '#a3decd', 3);
+    line(x, y - 25, x, y - 10, '#c2efdf', 3);
+    for (let i = 0; i < 3; i++) line(x - 6, y - 23 + i * 4, x + 6, y - 23 + i * 4, '#b1e8d5', 2);
+    line(x - 6, y - 10, x + 6, y - 10, '#b1e8d5', 3);
+    line(x - 7, y - 23, x - 13, y - 14 + swing, '#b1e8d5', 3);
+    line(x + 7, y - 23, x + 13, y - 14 - swing, '#b1e8d5', 3);
+    circle(x, y - 32, 9, '#c2efdf'); rect(x - 5, y - 28, 10, 5, '#c2efdf');
+    rect(x - 6, y - 35, 4, 5, '#14363e'); rect(x + 2, y - 35, 4, 5, '#14363e');
+    rect(x - 1, y - 30, 2, 3, '#14363e');
+    for (let i = -3; i <= 3; i += 3) rect(x + i, y - 26, 1, 3, '#347775');
+    ctx.restore();
+  }
+  function drawItem(item) {
+    if (item.ttl < 3 && Math.floor(item.ttl * 7) % 2) return;
+    const x = item.x, y = item.y - 2 + Math.sin(animationTime * 3 + item.phase) * 2;
+    if (item.type === 'rum') {
+      circle(x, y - 12, 17, '#ffda6b16');
+      rect(x - 4, y - 29, 8, 6, '#ca9c5e'); rect(x - 3, y - 24, 6, 6, '#699d88');
+      rect(x - 8, y - 19, 16, 18, '#387569'); rect(x - 6, y - 13, 12, 8, '#f4d18b');
+      text('R', x, y - 6, '#61462a', 9, 'center');
+    } else {
+      circle(x, y - 10, 10, '#b7d65e'); circle(x - 3, y - 13, 3, '#e7efa0');
+      line(x, y - 20, x + 5, y - 25, '#65985c', 3); rect(x + 3, y - 26, 7, 3, '#82ba68');
+      text('!', x + 15, y - 20, '#c5eb80', 11, 'center');
+    }
+  }
+  function drawHUD() {
+    rect(0, 0, W, 62, '#041219'); line(0, 62, W, 62, '#42616a', 1);
+    text('HAUL', 30, 20, '#86b2b6', 10); text(score.toLocaleString(), 30, 44, '#ffda86', 22);
+    text('WAVE', 230, 20, '#86b2b6', 10); text(String(wave).padStart(2, '0'), 230, 44, '#f1e6c9', 22);
+    text('LIVES', 348, 20, '#86b2b6', 10);
+    for (let i = 0; i < 3; i++) {
+      const color = i < lives ? '#ec987a' : '#304851', x = 353 + i * 23;
+      circle(x - 4, 34, 5, color); circle(x + 4, 34, 5, color);
+      ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x - 9, 35); ctx.lineTo(x + 9, 35); ctx.lineTo(x, 45); ctx.fill();
+    }
+    text('BEST', 530, 20, '#86b2b6', 10); text(best.toLocaleString(), 530, 44, '#b5d9cf', 20);
+    if (player) {
+      let offset = 32;
+      if (player.rum > 0) { text('RUM ' + player.rum.toFixed(1) + 's', offset, 84, '#ffdc83', 12); offset += 144; }
+      if (player.citrus > 0) text('REVERSED + SLOW ' + player.citrus.toFixed(1) + 's', offset, 84, '#c3e87c', 12);
+    }
+    text('CHEST DROP +100   ·   CRUSH +250   ·   CLEAR +1000', W / 2, 580, '#90b4b6', 11, 'center');
+    if (state === 'playing' && player && !waveDelay) {
+      if (player.mode === 'climb') text('← / → AT A DECK TO STEP OFF', W / 2, 559, '#d7d7ac', 11, 'center');
+      else if (player.mode === 'ground' && ROPES.some(x => Math.abs(x - player.x) <= ROPE_GRAB))
+        text('LADDER READY · ↑ / ↓ TO CLIMB', W / 2, 559, '#ffdc88', 11, 'center');
+    }
+    if (state === 'playing' && (waveNotice > 0 || waveDelay > 0)) {
+      text(waveDelay > 0 ? 'TREASURE SECURED!' : 'WAVE ' + wave + ' · ' + (2 + wave) + ' SKELETONS', W / 2, 108, '#ffdc88', 17, 'center');
+    }
+  }
+  function render() {
+    ctx.clearRect(0, 0, W, H); background(animationTime);
+    chests.forEach(drawDropZone);
+    items.forEach(drawItem); chests.filter(c => !c.falling).forEach(drawChest);
+    if (player && player.mode === 'jump') {
+      ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#010a0f'; ctx.beginPath();
+      ctx.ellipse(player.x, DECKS[player.deck] - 2, 14, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+    enemies.forEach(drawSkeleton); if (player) drawCaptain(player);
+    chests.filter(c => c.falling).forEach(drawChest);
+    for (const p of particles) { ctx.globalAlpha = Math.min(1, p.ttl * 2); rect(p.x, p.y, 3, 3, p.color); }
+    ctx.globalAlpha = 1;
+    for (const p of popups) { ctx.globalAlpha = Math.min(1, p.ttl * 2); text(p.text, clamp(p.x, 105, 695), p.y, '#ffe6a1', 12, 'center'); }
+    ctx.globalAlpha = 1; drawHUD();
+  }
+  function controllerStatus(message) {
+    if (message === controllerMessage) return;
+    controllerMessage = message; $('controllerStatus').textContent = message;
+  }
+  function menuButtons() {
+    const screen = state === 'start' ? $('startScreen') : state === 'paused' ? $('pauseScreen') : state === 'over' ? $('overScreen') : null;
+    return screen ? [...screen.querySelectorAll('button:not([disabled])')] : [];
+  }
+  function pollController(dt) {
+    let pads = [];
+    try { if (typeof navigator !== 'undefined' && navigator.getGamepads) pads = [...navigator.getGamepads()].filter(p => p && p.connected); }
+    catch (_) { controllerStatus('Controller access unavailable. Keyboard and touch controls remain available.'); }
+    const pad = pads.find(p => p.index + ':' + p.id === padIdentity) || pads.find(p => p.mapping === 'standard') || pads[0];
+    padKeys.clear();
+    if (!pad) {
+      if (padIdentity !== null) {
+        padIdentity = null; padPrevious = {}; padMenuScreen = null;
+        document.querySelectorAll('.controller-focus').forEach(b => b.classList.remove('controller-focus'));
+        if (state === 'playing') setScreen('paused');
+        controllerStatus('Controller disconnected · Reconnect and press a button · Keyboard / touch still available');
+      }
+      return;
+    }
+    const identity = pad.index + ':' + pad.id;
+    if (identity !== padIdentity) { padIdentity = identity; padPrevious = {}; menuRepeat = 0; }
+    controllerStatus('Controller ready · Stick / D-pad: move / menus · A / Cross: jump / confirm · Start / Options: pause · B / Circle: back');
+    const pressed = i => Boolean(pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5));
+    const axis = i => Number.isFinite(pad.axes[i]) ? pad.axes[i] : 0;
+    const current = {
+      left: pressed(14) || axis(0) < -0.35, right: pressed(15) || axis(0) > 0.35,
+      up: pressed(12) || axis(1) < -0.35, down: pressed(13) || axis(1) > 0.35,
+      confirm: pressed(0), back: pressed(1), pause: pressed(9)
+    };
+    const previous = padPrevious;
+    padPrevious = current; // Consume edges before screen changes; held confirm cannot become a jump.
+    if (document.hidden || (document.hasFocus && !document.hasFocus())) return;
+    const edge = key => current[key] && !previous[key];
+    if (edge('pause')) {
+      if (state === 'playing') setScreen('paused');
+      else if (state === 'paused') setScreen('playing');
+      else startGame();
+      return;
+    }
+    if (edge('back')) {
+      if (state === 'playing') setScreen('paused');
+      else if (state === 'paused') setScreen('playing');
+      else if (state === 'over') mainMenu();
+      return;
+    }
+    if (state === 'playing') {
+      padMenuScreen = null;
+      if (current.left) padKeys.add('ArrowLeft');
+      if (current.right) padKeys.add('ArrowRight');
+      if (current.up) padKeys.add('ArrowUp');
+      if (current.down) padKeys.add('ArrowDown');
+      if (edge('confirm')) jumpQueued = true;
+      return;
+    }
+    const buttons = menuButtons();
+    if (!buttons.length) return;
+    const enteringMenu = padMenuScreen !== state;
+    padMenuScreen = state;
+    const focusedIndex = buttons.indexOf(document.activeElement);
+    if (!enteringMenu && focusedIndex >= 0) menuIndex = focusedIndex;
+    const direction = current.down || current.right ? 1 : current.up || current.left ? -1 : 0;
+    const oldDirection = previous.down || previous.right ? 1 : previous.up || previous.left ? -1 : 0;
+    menuRepeat = Math.max(0, menuRepeat - dt);
+    if (direction && (direction !== oldDirection || menuRepeat === 0)) {
+      menuIndex = (menuIndex + direction + buttons.length) % buttons.length;
+      menuRepeat = direction !== oldDirection ? 0.4 : 0.18;
+    } else if (!direction) menuRepeat = 0;
+    menuIndex = clamp(menuIndex, 0, buttons.length - 1);
+    buttons.forEach((button, i) => button.classList.toggle('controller-focus', i === menuIndex));
+    if ((enteringMenu || direction || edge('confirm')) && document.activeElement !== buttons[menuIndex])
+      buttons[menuIndex].focus({ preventScroll: true });
+    if (edge('confirm')) buttons[menuIndex].click();
+  }
+  function frame(timestamp) {
+    const dt = lastFrame ? Math.min((timestamp - lastFrame) / 1000, 0.1) : 0;
+    lastFrame = timestamp;
+    pollController(dt);
+    if (state === 'playing' || state === 'start') animationTime += dt;
+    if (state === 'playing') {
+      accumulator += dt;
+      while (accumulator >= STEP && state === 'playing') { update(STEP); accumulator = Math.max(0, accumulator - STEP); }
+    } else accumulator = 0;
+    render(); requestAnimationFrame(frame);
+  }
+  const gameKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
+  window.addEventListener('keydown', event => {
+    if (event.code === 'Escape' || event.code === 'KeyP') {
+      if (!event.repeat && (state === 'playing' || state === 'paused')) { event.preventDefault(); setScreen(state === 'playing' ? 'paused' : 'playing'); }
+      return;
+    }
+    if (state !== 'playing' || !gameKeys.has(event.code)) return;
+    event.preventDefault(); keyboard.add(event.code);
+    if (event.code === 'Space' && !event.repeat) jumpQueued = true;
+  });
+  window.addEventListener('keyup', event => keyboard.delete(event.code));
+  window.addEventListener('blur', () => { if (state === 'playing') setScreen('paused'); else clearInput(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'playing') setScreen('paused'); });
+  for (const button of document.querySelectorAll('[data-key]')) {
+    button.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      if (state !== 'playing') return;
+      button.setPointerCapture(event.pointerId); pointers.set(event.pointerId, button.dataset.key);
+      button.classList.add('pressed'); if (button.dataset.key === 'Space') jumpQueued = true;
+    });
+    const release = event => {
+      pointers.delete(event.pointerId);
+      if (![...pointers.values()].includes(button.dataset.key)) button.classList.remove('pressed');
+    };
+    button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
+  }
+  $('playButton').addEventListener('click', startGame);
+  $('againButton').addEventListener('click', startGame);
+  $('pauseButton').addEventListener('click', () => setScreen('paused'));
+  $('resumeButton').addEventListener('click', () => setScreen('playing'));
+  $('pauseMenuButton').addEventListener('click', mainMenu);
+  $('overMenuButton').addEventListener('click', mainMenu);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+---
+import type { ContentCard } from '../data/content';
+const {item} = Astro.props as {item:ContentCard};
+---
+{item.image && <img class:list={['detail-image',item.imageFit === 'contain' && 'image-contain']} src={item.image} alt={item.imageAlt ?? `${item.title} product image`} loading="lazy"/>}
+{item.gallery?.length && <div class="detail-gallery">{item.gallery.map(image=><figure class="detail-gallery-item"><img class="detail-gallery-image" src={image.src} alt={image.alt} loading="lazy"/>{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div>}

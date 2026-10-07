@@ -1,0 +1,2571 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#041c27" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Downhill Detour — Collectively Bzy</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --navy: #082c3a;
+      --navy-deep: #041c27;
+      --charcoal: #17242a;
+      --snow: #ffffff;
+      --snow-blue: #dceff0;
+      --sea-glass: #9bd2c4;
+      --sea-glass-dark: #2f766e;
+      --foam: #d9f3ec;
+      --brass: #e6a84d;
+      --sunset: #e97656;
+      --slate: #65757c;
+      --ink: #132229;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 50% -15%, rgba(155, 210, 196, .18), transparent 34rem),
+        var(--navy-deep);
+      color: var(--foam);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    button { font: inherit; }
+
+    button:focus-visible,
+    .game-frame:focus-visible {
+      outline: 3px solid var(--brass);
+      outline-offset: 4px;
+    }
+
+    .app {
+      width: min(100%, 920px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: max(18px, env(safe-area-inset-top, 0px)) 16px calc(22px + var(--safe-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cabinet {
+      width: min(802px, 100%);
+      overflow: hidden;
+      border: 1px solid rgba(217, 243, 236, .2);
+      border-radius: 24px;
+      background: #061f2d;
+      box-shadow: 0 30px 90px rgba(0, 10, 16, .5);
+    }
+
+    .cabinet-rail {
+      min-height: 46px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #a8c8c4;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .cabinet-rail strong { color: var(--foam); }
+
+    .signal {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--brass);
+      box-shadow: 0 0 14px rgba(230, 168, 77, .8);
+      vertical-align: -1px;
+    }
+
+    .rail-actions { display: flex; align-items: center; gap: 10px; }
+
+    .pause-button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 5px 11px;
+      border: 1px solid rgba(217, 243, 236, .28);
+      border-radius: 4px;
+      background: rgba(217, 243, 236, .06);
+      color: var(--foam);
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .pause-button:disabled { opacity: .38; cursor: default; }
+    .pause-button:not(:disabled):hover { border-color: var(--brass); color: var(--brass); }
+
+    .game-frame {
+      position: relative;
+      width: min(800px, 100%);
+      aspect-ratio: 4 / 3;
+      margin: 0 auto;
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--snow);
+      outline: none;
+      touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: var(--snow);
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    .edge-flash {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      border: 0 solid rgba(233, 118, 86, 0);
+      pointer-events: none;
+    }
+
+    .edge-flash.show {
+      border-width: 14px;
+      border-color: rgba(233, 118, 86, .82);
+      animation: crash-flash .34s steps(2, end);
+    }
+
+    @keyframes crash-flash {
+      0%, 100% { opacity: 0; }
+      20%, 70% { opacity: 1; }
+    }
+
+    .hud {
+      position: absolute;
+      z-index: 3;
+      inset: 0 0 auto;
+      min-height: 74px;
+      padding: 11px 16px 9px;
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 10px;
+      align-items: start;
+      border-bottom: 2px solid rgba(8, 44, 58, .14);
+      background: rgba(255, 255, 255, .91);
+      color: var(--navy);
+      box-shadow: 0 8px 20px rgba(8, 44, 58, .06);
+      pointer-events: none;
+    }
+
+    .hud-cell { min-width: 0; }
+    .hud-cell.center { text-align: center; }
+    .hud-cell.right { text-align: right; }
+
+    .hud-label {
+      display: block;
+      margin-bottom: 3px;
+      color: #557278;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .hud-value {
+      display: block;
+      overflow: hidden;
+      color: var(--navy-deep);
+      font-size: clamp(14px, 2.9vw, 22px);
+      font-weight: 950;
+      letter-spacing: .05em;
+      line-height: 1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hud-sub {
+      display: block;
+      margin-top: 5px;
+      color: var(--sea-glass-dark);
+      font-size: clamp(7px, 1.6vw, 10px);
+      font-weight: 900;
+      letter-spacing: .09em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .lives { color: var(--sunset); letter-spacing: .13em; }
+
+    .effect-chip {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      top: 82px;
+      max-width: 80%;
+      padding: 7px 12px;
+      transform: translateX(-50%);
+      border: 2px solid var(--navy);
+      border-radius: 3px;
+      background: var(--brass);
+      color: var(--navy-deep);
+      box-shadow: 4px 4px 0 rgba(8, 44, 58, .15);
+      font-size: clamp(8px, 1.8vw, 11px);
+      font-weight: 950;
+      letter-spacing: .08em;
+      text-align: center;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .effect-chip.ice { background: #bcecf2; }
+
+    .toast {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      bottom: 58px;
+      max-width: 86%;
+      padding: 9px 13px;
+      transform: translate(-50%, 8px);
+      border: 2px solid var(--navy);
+      background: var(--foam);
+      color: var(--navy-deep);
+      box-shadow: 5px 5px 0 rgba(8, 44, 58, .18);
+      opacity: 0;
+      font-size: clamp(8px, 1.9vw, 12px);
+      font-weight: 950;
+      letter-spacing: .07em;
+      text-align: center;
+      text-transform: uppercase;
+      transition: opacity .12s linear, transform .12s linear;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.bonus { background: #fff0bd; }
+    .toast.danger { background: #ffd9cf; }
+
+    .screen {
+      position: absolute;
+      z-index: 7;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(10px, 3vw, 28px);
+      background: rgba(4, 28, 39, .52);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      touch-action: pan-y;
+    }
+
+    .screen-card {
+      width: min(520px, 92%);
+      max-height: 96%;
+      overflow: auto;
+      padding: clamp(16px, 4vw, 32px);
+      border: 2px solid rgba(217, 243, 236, .65);
+      border-radius: 4px;
+      background: rgba(4, 28, 39, .94);
+      color: var(--foam);
+      box-shadow: 10px 10px 0 rgba(4, 28, 39, .28);
+      text-align: center;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .screen-stamp {
+      color: var(--brass);
+      font-size: clamp(7px, 1.7vw, 10px);
+      font-weight: 900;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .screen h1,
+    .screen h2 {
+      margin: 10px 0 9px;
+      color: #fffdf6;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(29px, 7vw, 58px);
+      letter-spacing: -.065em;
+      line-height: .88;
+    }
+
+    .screen h2 { font-size: clamp(27px, 6vw, 50px); }
+
+    .screen-copy {
+      max-width: 410px;
+      margin: 0 auto;
+      color: #bcd8d2;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(10px, 2.2vw, 13px);
+      line-height: 1.5;
+    }
+
+    .control-table {
+      width: 100%;
+      max-width: 455px;
+      margin: 13px auto 7px;
+      border: 1px solid rgba(217, 243, 236, .22);
+      border-collapse: collapse;
+      table-layout: fixed;
+      color: #aac8c2;
+      font-size: clamp(7px, 1.55vw, 9px);
+      font-weight: 850;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+    }
+
+    .control-table th,
+    .control-table td {
+      padding: 5px 6px;
+      border: 1px solid rgba(217, 243, 236, .14);
+      line-height: 1.25;
+    }
+
+    .control-table thead th {
+      background: rgba(217, 243, 236, .08);
+      color: #789e9b;
+      font-size: .86em;
+      letter-spacing: .11em;
+    }
+
+    .control-table thead th:first-child { width: 20%; }
+    .control-table thead th:nth-child(2) { width: 31%; }
+    .control-table tbody th { color: var(--brass); text-align: left; }
+    .control-table td { color: #effbf7; }
+
+    .menu-hint,
+    .controller-status {
+      margin: 6px auto 9px;
+      color: #87aaa7;
+      font-size: clamp(6px, 1.45vw, 8px);
+      font-weight: 850;
+      letter-spacing: .08em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .controller-status {
+      margin: 0 auto 9px;
+      color: #789e9b;
+    }
+
+    .controller-status.connected { color: var(--brass); }
+
+    .menu-actions {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .menu-actions.vertical {
+      width: min(280px, 100%);
+      margin-inline: auto;
+      flex-direction: column;
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 44px;
+      margin-top: 2px;
+      padding: 11px 18px;
+      border: 2px solid var(--brass);
+      border-radius: 3px;
+      background: var(--brass);
+      color: var(--navy-deep);
+      cursor: pointer;
+      font-size: clamp(9px, 2vw, 12px);
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .primary-button:hover { background: #f2c36f; }
+
+    .secondary-button {
+      margin-left: 6px;
+      border-color: rgba(217, 243, 236, .45);
+      background: transparent;
+      color: var(--foam);
+    }
+
+    .secondary-button:hover { border-color: var(--foam); background: rgba(217, 243, 236, .08); }
+
+    .menu-actions .primary-button,
+    .menu-actions .secondary-button { margin: 0; }
+
+    .primary-button.controller-selected,
+    .secondary-button.controller-selected {
+      outline: 3px solid #fffdf6;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 5px rgba(230, 168, 77, .8);
+    }
+
+    .best-line {
+      margin: 12px 0 0;
+      color: #9abbb7;
+      font-size: clamp(7px, 1.7vw, 10px);
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .best-line b { color: var(--brass); }
+
+    .summary-grid {
+      margin: 14px 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+
+    .summary-item {
+      padding: 8px 6px;
+      border: 1px solid rgba(217, 243, 236, .19);
+      background: rgba(217, 243, 236, .055);
+    }
+
+    .summary-item small {
+      display: block;
+      margin-bottom: 4px;
+      color: #91b5b0;
+      font-size: clamp(7px, 1.6vw, 9px);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .summary-item strong {
+      color: #ffffff;
+      font-size: clamp(13px, 3vw, 19px);
+    }
+
+    .touch-controls {
+      min-height: 84px;
+      padding: 12px 14px calc(12px + var(--safe-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-top: 1px solid rgba(217, 243, 236, .12);
+      background: #061f2d;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .control-group { display: flex; gap: 8px; }
+
+    .control-button {
+      min-width: 66px;
+      min-height: 54px;
+      padding: 7px 11px;
+      border: 1px solid rgba(217, 243, 236, .32);
+      border-radius: 5px;
+      background: rgba(217, 243, 236, .07);
+      color: var(--foam);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .control-button b {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--brass);
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .control-button.active,
+    .control-button:active {
+      border-color: var(--brass);
+      background: var(--brass);
+      color: var(--navy-deep);
+      transform: translateY(1px);
+    }
+
+    .control-button.active b,
+    .control-button:active b { color: var(--navy-deep); }
+
+    .control-button.boost { border-color: rgba(230, 168, 77, .6); }
+
+    .control-note {
+      flex: 1;
+      color: #769f9d;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      line-height: 1.45;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 620px) {
+      .app { padding-inline: 0; align-items: flex-start; }
+      .cabinet { border-inline: 0; border-radius: 0; }
+      .cabinet-rail { min-height: 42px; padding: 7px 10px; font-size: 8px; }
+      .game-frame { width: 100%; }
+      .hud { min-height: 57px; padding: 7px 9px 6px; gap: 4px; }
+      .hud-label { font-size: 6px; margin-bottom: 2px; }
+      .hud-sub { margin-top: 3px; }
+      .effect-chip { top: 64px; padding: 5px 8px; }
+      .toast { bottom: 24px; padding: 6px 9px; }
+      .screen-card { padding: 9px 10px; }
+      #start-screen h1 { margin: 4px 0 5px; font-size: clamp(24px, 7.5vw, 30px); line-height: 1; white-space: nowrap; }
+      #start-screen h1 br { display: none; }
+      .screen-copy { font-size: 9px; line-height: 1.25; }
+      .control-table { margin: 5px auto 3px; font-size: 6.5px; }
+      .control-table th, .control-table td { padding: 2px 3px; line-height: 1.12; }
+      .menu-hint, .controller-status { margin-block: 3px; font-size: 5.8px; line-height: 1.25; }
+      .best-line { margin-top: 4px; }
+      .summary-grid { margin: 9px 0; gap: 5px; }
+      .summary-item { padding: 5px 4px; }
+      .primary-button, .secondary-button { min-height: 44px; padding: 7px 11px; }
+      .touch-controls { padding: 9px 8px calc(9px + var(--safe-bottom)); gap: 6px; }
+      .control-group { gap: 5px; }
+      .control-button { min-width: 54px; min-height: 50px; padding-inline: 7px; font-size: 8px; }
+      .control-note { display: none; }
+    }
+
+    @media (max-width: 360px) {
+      .rail-brand { display: none; }
+      .cabinet-rail { gap: 6px; }
+      .menu-actions:not(.vertical) { flex-direction: column; }
+    }
+
+    @media (max-width: 420px) {
+      #start-screen .best-line { display: none; }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .control-button:hover { border-color: var(--brass); color: var(--brass); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="cabinet" aria-label="Downhill Detour game cabinet">
+      <header class="cabinet-rail">
+        <span><i class="signal" aria-hidden="true"></i><strong>Alpine circuit</strong> · run <b id="run-number">01</b></span>
+        <div class="rail-actions">
+          <span class="rail-brand">Collectively Bzy</span>
+          <button class="pause-button" id="pause-button" type="button" disabled>Pause</button>
+        </div>
+      </header>
+
+      <div
+        class="game-frame"
+        id="game-frame"
+        tabindex="-1"
+        role="region"
+        aria-label="Downhill Detour. Use arrow keys or a controller left stick to steer. Accelerate with Up, W, right trigger, or the primary face button. Brake with Down, S, left trigger, or the back face button."
+        aria-describedby="game-instructions"
+      >
+        <p class="sr-only" id="game-instructions">Ski downhill through an endless course. Avoid trees and rocks, pass between paired flags for a large bonus, collect Waxed Skis for sharper steering and double score, and avoid Thin Ice that forces a fast straight dive. On a controller, use the left stick or directional pad to steer, right trigger or the primary face button to boost, left trigger or the back face button to brake, and Menu or Options to pause.</p>
+        <canvas id="game-canvas" width="800" height="600" aria-hidden="true"></canvas>
+        <div class="edge-flash" id="edge-flash" aria-hidden="true"></div>
+
+        <div class="hud" id="hud" hidden aria-hidden="true">
+          <div class="hud-cell">
+            <span class="hud-label">Score</span>
+            <strong class="hud-value" id="score">000000</strong>
+            <span class="hud-sub" id="wave">Wave 01 · speed ×1.00</span>
+          </div>
+          <div class="hud-cell center">
+            <span class="hud-label">Lives</span>
+            <strong class="hud-value lives" id="lives">◆ ◆ ◆</strong>
+            <span class="hud-sub" id="status">Clear run</span>
+          </div>
+          <div class="hud-cell right">
+            <span class="hud-label">High score</span>
+            <strong class="hud-value" id="high-score">000000</strong>
+            <span class="hud-sub" id="distance">Distance 0 m</span>
+          </div>
+        </div>
+
+        <div class="effect-chip" id="effect-chip" hidden></div>
+        <div class="toast" id="toast" aria-hidden="true"></div>
+
+        <section class="screen" id="start-screen" role="dialog" aria-modal="true" aria-labelledby="game-title">
+          <div class="screen-card">
+            <div class="screen-stamp">A small run down the mountain</div>
+            <h1 id="game-title">Downhill <br />Detour</h1>
+            <p class="screen-copy">Find the clean line, thread tight slalom gates, and keep all three lives as the mountain gets faster.</p>
+            <table class="control-table">
+              <caption class="sr-only">Keyboard and controller controls</caption>
+              <thead>
+                <tr><th scope="col">Action</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Steer</th><td>← → / A D</td><td>L stick / D-pad ← →</td></tr>
+                <tr><th scope="row">Boost</th><td>↑ / W</td><td>RT / R2 · ↑ · A / ✕</td></tr>
+                <tr><th scope="row">Brake</th><td>↓ / S</td><td>LT / L2 · ↓ · B / ○</td></tr>
+                <tr><th scope="row">Pause</th><td>P / Esc</td><td>Menu / Options</td></tr>
+              </tbody>
+            </table>
+            <p class="menu-hint">Menus · D-pad / stick to navigate · A / ✕ select · B / ○ back</p>
+            <p class="controller-status" id="controller-status">Controller · press any button to connect</p>
+            <button class="primary-button" id="start-button" type="button">Hit the slope ↘</button>
+            <p class="best-line">Best run <b id="start-best">000000</b></p>
+          </div>
+        </section>
+
+        <section class="screen" id="pause-screen" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
+          <div class="screen-card">
+            <div class="screen-stamp">Course held</div>
+            <h2 id="pause-title">Run paused.</h2>
+            <p class="screen-copy">The mountain will wait. Menu / Options, P, Escape, or B returns to the run.</p>
+            <div class="menu-actions vertical">
+              <button class="primary-button" id="resume-button" type="button">Resume run</button>
+              <button class="secondary-button" id="restart-pause-button" type="button">Restart run</button>
+              <button class="secondary-button" id="exit-pause-button" type="button">Exit to title</button>
+            </div>
+            <p class="menu-hint">D-pad / stick to navigate · A / ✕ select · B / ○ back</p>
+          </div>
+        </section>
+
+        <section class="screen" id="game-over-screen" role="dialog" aria-modal="true" aria-labelledby="game-over-title" hidden>
+          <div class="screen-card">
+            <div class="screen-stamp" id="game-over-stamp">Run complete</div>
+            <h2 id="game-over-title">Mountain: 1.<br />Skier: 0.</h2>
+            <div class="summary-grid" aria-label="Run summary">
+              <div class="summary-item"><small>Score</small><strong id="final-score">0</strong></div>
+              <div class="summary-item"><small>Best</small><strong id="final-best">0</strong></div>
+              <div class="summary-item"><small>Gates cleared</small><strong id="final-gates">0</strong></div>
+              <div class="summary-item"><small>Distance</small><strong id="final-distance">0 m</strong></div>
+              <div class="summary-item"><small>Top speed</small><strong id="final-speed">0 km/h</strong></div>
+              <div class="summary-item"><small>Wave reached</small><strong id="final-wave">01</strong></div>
+            </div>
+            <div class="menu-actions">
+              <button class="primary-button" id="restart-button" type="button">Ski again ↘</button>
+              <button class="secondary-button" id="exit-over-button" type="button">Title menu</button>
+            </div>
+            <p class="menu-hint">D-pad / stick to navigate · A / ✕ select · B / ○ title</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="touch-controls" id="touch-controls" aria-label="Touch controls" aria-hidden="true" inert>
+        <div class="control-group">
+          <button class="control-button" type="button" data-hold="left" aria-label="Hold to steer left"><b>←</b>Left</button>
+          <button class="control-button" type="button" data-hold="right" aria-label="Hold to steer right"><b>→</b>Right</button>
+        </div>
+        <div class="control-note">Keys: arrows move · P pauses<br />Controller: left stick · LT / RT · Menu pauses</div>
+        <div class="control-group">
+          <button class="control-button" type="button" data-hold="brake" aria-label="Hold to brake"><b>↓</b>Brake</button>
+          <button class="control-button boost" type="button" data-hold="boost" aria-label="Hold to accelerate"><b>↑</b>Boost</button>
+        </div>
+      </div>
+    </section>
+    <div class="sr-only" id="live-status" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const WIDTH = 800;
+      const HEIGHT = 600;
+      const PLAYER_Y = 184;
+      const PLAYER_HALF_W = 10;
+      const PLAYER_HALF_H = 15;
+      const BASE_SCROLL_SPEED = 138;
+      const MAX_BASE_SCROLL_SPEED = 420;
+      const MAX_SCROLL_SPEED = MAX_BASE_SCROLL_SPEED * 1.52;
+      const MAX_DIFFICULTY_WAVE = 22;
+      const THIN_ICE_DURATION = 3;
+      const THIN_ICE_RECOVERY = 8;
+      const ENTITY_ENTRY_LIMIT = HEIGHT + 160;
+      const FIXED_STEP = 1 / 120;
+      const COURSE_HALF_WIDTH = 58;
+      const FORK_HALF_WIDTH = 52;
+      // v2 starts a clean leaderboard after fixing the v1 runaway-speed exploit.
+      const STORAGE_KEY = 'collectivelyBzy.downhillDetour.highScore.v2';
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const COLORS = {
+        navy: '#082c3a',
+        navyDeep: '#041c27',
+        ink: '#132229',
+        snow: '#ffffff',
+        snowBlue: '#dceff0',
+        seaGlass: '#9bd2c4',
+        seaGlassDark: '#2f766e',
+        foam: '#d9f3ec',
+        brass: '#e6a84d',
+        sunset: '#e97656',
+        slate: '#65757c',
+        slateDark: '#394950'
+      };
+
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const frame = document.getElementById('game-frame');
+      const hud = document.getElementById('hud');
+      const scoreEl = document.getElementById('score');
+      const highScoreEl = document.getElementById('high-score');
+      const waveEl = document.getElementById('wave');
+      const livesEl = document.getElementById('lives');
+      const statusEl = document.getElementById('status');
+      const distanceEl = document.getElementById('distance');
+      const effectChip = document.getElementById('effect-chip');
+      const toast = document.getElementById('toast');
+      const edgeFlash = document.getElementById('edge-flash');
+      const startScreen = document.getElementById('start-screen');
+      const pauseScreen = document.getElementById('pause-screen');
+      const gameOverScreen = document.getElementById('game-over-screen');
+      const startButton = document.getElementById('start-button');
+      const resumeButton = document.getElementById('resume-button');
+      const restartButton = document.getElementById('restart-button');
+      const restartPauseButton = document.getElementById('restart-pause-button');
+      const exitPauseButton = document.getElementById('exit-pause-button');
+      const exitOverButton = document.getElementById('exit-over-button');
+      const pauseButton = document.getElementById('pause-button');
+      const touchControls = document.getElementById('touch-controls');
+      const startBestEl = document.getElementById('start-best');
+      const controllerStatus = document.getElementById('controller-status');
+      const liveStatus = document.getElementById('live-status');
+      const runNumberEl = document.getElementById('run-number');
+
+      const held = new Set();
+      const gamepadInput = { analogSteer: 0, digitalSteer: 0, boost: false, brake: false };
+      const player = { x: WIDTH / 2, vx: 0, lean: 0 };
+      let mode = 'ready';
+      let runNumber = 0;
+      let score = 0;
+      let scrollDistance = 0;
+      let scrollSpeed = BASE_SCROLL_SPEED;
+      let topSpeed = BASE_SCROLL_SPEED;
+      let lives = 3;
+      let gatesCleared = 0;
+      let entities = [];
+      let particles = [];
+      let tracks = [];
+      let courseSections = [];
+      let trackClock = 0;
+      let nextBandDistance = 0;
+      let lastBandDistance = 0;
+      let safeCorridorX = WIDTH / 2;
+      let corridorTargetX = WIDTH / 2;
+      let courseSlope = 0;
+      let nextTurnDistance = 0;
+      let previousCourseCenters = [WIDTH / 2];
+      let previousCourseHalfWidth = COURSE_HALF_WIDTH;
+      let forkState = null;
+      let nextForkDistance = 0;
+      let lastGateDistance = -1000;
+      let lastPickupDistance = -1000;
+      let waxTimer = 0;
+      let iceTimer = 0;
+      let iceRecoveryTimer = 0;
+      let invulnerableTimer = 0;
+      let crashFreezeTimer = 0;
+      let endingTimer = 0;
+      let toastTimer = 0;
+      let peakCourseAnnounced = false;
+      let canRestartAt = 0;
+      let lastTime = performance.now();
+      let accumulator = 0;
+      let animationFrame = 0;
+      let activeGamepadIndex = null;
+      let activeGamepadId = '';
+      let previousPadButtons = [];
+      let padNavDirection = 0;
+      let padNavNextRepeat = 0;
+      let padMenuArmed = true;
+      let padGameplayArmed = false;
+      let pageHasFocus = document.hasFocus();
+      let digitalSteerDirection = 0;
+      let digitalSteerTime = 0;
+      let bestScore = loadBestScore();
+
+      function loadBestScore() {
+        try {
+          const saved = Number(localStorage.getItem(STORAGE_KEY));
+          return Number.isSafeInteger(saved) && saved > 0 ? saved : 0;
+        } catch (_) {
+          return 0;
+        }
+      }
+
+      function saveBestScore(value) {
+        try {
+          localStorage.setItem(STORAGE_KEY, String(Math.floor(value)));
+        } catch (_) {
+          // Storage may be unavailable in private browsing or an embedded WebView.
+        }
+      }
+
+      function setupCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(WIDTH * dpr);
+        canvas.height = Math.round(HEIGHT * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+      }
+
+      function random(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function approach(current, target, response, dt) {
+        return current + (target - current) * (1 - Math.exp(-response * dt));
+      }
+
+      function difficultyFactor() {
+        // Add 10% of the starting pace every 500 points. Keeping the curve
+        // linear prevents gate bonuses from causing exponential runaway;
+        // physical speed is capped separately so entities stay renderable.
+        return 1 + Math.max(0, score) / 5000;
+      }
+
+      function currentWave() {
+        return Math.min(MAX_DIFFICULTY_WAVE, Math.floor(score / 500) + 1);
+      }
+
+      function baseSpeed() {
+        return Math.min(MAX_BASE_SCROLL_SPEED, BASE_SCROLL_SPEED * difficultyFactor());
+      }
+
+      function atMaximumCoursePace() {
+        return baseSpeed() >= MAX_BASE_SCROLL_SPEED - .01;
+      }
+
+      function speedMultiplier() {
+        return scrollSpeed / Math.max(1, baseSpeed());
+      }
+
+      function paceMultiplier() {
+        return scrollSpeed / BASE_SCROLL_SPEED;
+      }
+
+      function scoreMultiplier() {
+        return speedMultiplier() * (waxTimer > 0 ? 2 : 1);
+      }
+
+      function formatScore(value) {
+        return String(Math.max(0, Math.floor(value))).padStart(6, '0');
+      }
+
+      function announce(message) {
+        liveStatus.textContent = '';
+        window.setTimeout(() => { liveStatus.textContent = message; }, 20);
+      }
+
+      function showToast(message, tone = '') {
+        toast.textContent = message;
+        toast.className = `toast show${tone ? ` ${tone}` : ''}`;
+        toastTimer = 1.35;
+      }
+
+      function clearGamepadOutput() {
+        gamepadInput.analogSteer = 0;
+        gamepadInput.digitalSteer = 0;
+        gamepadInput.boost = false;
+        gamepadInput.brake = false;
+      }
+
+      function clearInput() {
+        held.clear();
+        clearGamepadOutput();
+        padGameplayArmed = false;
+        digitalSteerDirection = 0;
+        digitalSteerTime = 0;
+        document.querySelectorAll('[data-hold].active').forEach((button) => button.classList.remove('active'));
+      }
+
+      function clearControllerSelection() {
+        document.querySelectorAll('.controller-selected').forEach((button) => button.classList.remove('controller-selected'));
+      }
+
+      function focusMenuButton(button, fromController = false) {
+        if (!button) return;
+        clearControllerSelection();
+        if (fromController) button.classList.add('controller-selected');
+        button.focus({ preventScroll: true });
+        button.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      }
+
+      function menuButtonsForMode(menuMode = mode) {
+        if (menuMode === 'ready') return [startButton];
+        if (menuMode === 'paused') return [resumeButton, restartPauseButton, exitPauseButton];
+        if (menuMode === 'over') return [restartButton, exitOverButton];
+        return [];
+      }
+
+      function moveMenuFocus(direction, fromController = true) {
+        const buttons = menuButtonsForMode();
+        if (!buttons.length) return false;
+        const currentIndex = buttons.indexOf(document.activeElement);
+        const startIndex = currentIndex >= 0 ? currentIndex : 0;
+        const nextIndex = (startIndex + direction + buttons.length) % buttons.length;
+        focusMenuButton(buttons[nextIndex], fromController);
+        return true;
+      }
+
+      function activateFocusedMenuButton(now, fromController = true) {
+        const buttons = menuButtonsForMode();
+        if (!buttons.length) return false;
+        const focused = buttons.includes(document.activeElement) ? document.activeElement : buttons[0];
+        if (focused === restartButton && now < canRestartAt) return false;
+        focusMenuButton(focused, fromController);
+        focused.click();
+        return true;
+      }
+
+      function setControllerStatus(connected, pad = null) {
+        controllerStatus.classList.toggle('connected', connected);
+        if (!connected) {
+          controllerStatus.textContent = 'Controller · press any button to connect';
+          return;
+        }
+        const rawName = String(pad?.id || 'Controller').replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+        const shortName = rawName.length > 30 ? `${rawName.slice(0, 27)}…` : rawName;
+        controllerStatus.textContent = `${shortName || 'Controller'} ready · A / ✕ select`;
+      }
+
+      function registerGamepad(pad) {
+        if (!pad) return;
+        const isNewPad = activeGamepadIndex !== pad.index || activeGamepadId !== pad.id;
+        activeGamepadIndex = pad.index;
+        activeGamepadId = pad.id || `Controller ${pad.index + 1}`;
+        setControllerStatus(true, pad);
+        if (isNewPad) {
+          previousPadButtons = [];
+          padNavDirection = 0;
+          padMenuArmed = false;
+          padGameplayArmed = false;
+          clearGamepadOutput();
+          announce('Controller ready. Use A or Cross to select.');
+          if (mode === 'running') showToast('Controller ready · Menu pauses', 'bonus');
+        }
+      }
+
+      function unregisterGamepad() {
+        if (activeGamepadIndex === null) return;
+        activeGamepadIndex = null;
+        activeGamepadId = '';
+        previousPadButtons = [];
+        padNavDirection = 0;
+        padMenuArmed = false;
+        padGameplayArmed = false;
+        clearGamepadOutput();
+        clearControllerSelection();
+        setControllerStatus(false);
+        if (mode === 'running' && endingTimer === 0) {
+          pauseGame();
+          announce('Controller disconnected. Game paused.');
+        } else {
+          announce('Controller disconnected.');
+        }
+      }
+
+      function padButtonValue(pad, index) {
+        const button = pad?.buttons?.[index];
+        if (typeof button === 'number') return clamp(button, 0, 1);
+        const value = Number(button?.value);
+        return Number.isFinite(value) ? clamp(value, 0, 1) : (button?.pressed ? 1 : 0);
+      }
+
+      function padButtonDown(pad, index) {
+        const button = pad?.buttons?.[index];
+        const pressed = typeof button === 'object' && Boolean(button?.pressed);
+        const threshold = previousPadButtons[index] ? .35 : .55;
+        return pressed || padButtonValue(pad, index) >= threshold;
+      }
+
+      function padAxis(pad, index) {
+        const value = Number(pad?.axes?.[index]);
+        return Number.isFinite(value) ? clamp(value, -1, 1) : 0;
+      }
+
+      function stickWithDeadzone(value, deadzone = .18) {
+        const magnitude = Math.abs(value);
+        if (magnitude <= deadzone) return 0;
+        return Math.sign(value) * ((magnitude - deadzone) / (1 - deadzone));
+      }
+
+      function connectedGamepad() {
+        if (typeof navigator.getGamepads !== 'function') return null;
+        let pads;
+        try {
+          pads = Array.from(navigator.getGamepads() || []);
+        } catch (_) {
+          return null;
+        }
+        let pad = null;
+        if (activeGamepadIndex !== null) {
+          pad = pads[activeGamepadIndex];
+          if (!pad?.connected) {
+            unregisterGamepad();
+            return null;
+          }
+        } else {
+          pad = pads.find((candidate) => candidate?.connected) || null;
+        }
+        if (pad && (activeGamepadIndex !== pad.index || activeGamepadId !== pad.id)) registerGamepad(pad);
+        return pad;
+      }
+
+      function pollGamepad(now) {
+        const pad = connectedGamepad();
+        if (!pad) {
+          unregisterGamepad();
+          return;
+        }
+
+        const buttonCount = Math.max(17, pad.buttons?.length || 0);
+        const currentButtons = Array.from({ length: buttonCount }, (_, index) => padButtonDown(pad, index));
+        const pressedThisFrame = (index) => currentButtons[index] && !previousPadButtons[index];
+        const axisX = padAxis(pad, 0);
+        const axisY = padAxis(pad, 1);
+        const dpadX = (currentButtons[15] ? 1 : 0) - (currentButtons[14] ? 1 : 0);
+        const dpadY = (currentButtons[13] ? 1 : 0) - (currentButtons[12] ? 1 : 0);
+        const stickNavY = Math.abs(axisY) >= .62 ? Math.sign(axisY) : 0;
+        const stickNavX = Math.abs(axisX) >= .62 ? Math.sign(axisX) : 0;
+        const navDirection = dpadY || stickNavY || dpadX || stickNavX;
+
+        if (!pageHasFocus || document.hidden) {
+          clearGamepadOutput();
+          padNavDirection = navDirection;
+          if (!navDirection) padMenuArmed = true;
+          previousPadButtons = currentButtons;
+          return;
+        }
+
+        const modeAtPollStart = mode;
+        let commandHandled = false;
+        let menuMoved = false;
+
+        if (pressedThisFrame(9)) {
+          commandHandled = true;
+          if (modeAtPollStart === 'ready') startButton.click();
+          else if (modeAtPollStart === 'running') pauseGame();
+          else if (modeAtPollStart === 'paused') resumeGame();
+          else if (modeAtPollStart === 'over' && now >= canRestartAt) restartButton.click();
+        } else if (pressedThisFrame(8) && modeAtPollStart === 'running') {
+          commandHandled = true;
+          pauseGame();
+        } else if ((pressedThisFrame(1) || pressedThisFrame(8)) && modeAtPollStart === 'paused') {
+          commandHandled = true;
+          resumeGame();
+        } else if ((pressedThisFrame(1) || pressedThisFrame(8)) && modeAtPollStart === 'over') {
+          commandHandled = true;
+          returnToTitle();
+        }
+
+        const isMenu = modeAtPollStart === 'ready' || modeAtPollStart === 'paused' || modeAtPollStart === 'over';
+        if (!commandHandled && isMenu) {
+          if (navDirection === 0) {
+            padNavDirection = 0;
+            padMenuArmed = true;
+          } else if (padMenuArmed && navDirection !== padNavDirection) {
+            padNavDirection = navDirection;
+            padNavNextRepeat = now + 320;
+            menuMoved = moveMenuFocus(navDirection);
+          } else if (padMenuArmed && navDirection === padNavDirection && now >= padNavNextRepeat) {
+            padNavNextRepeat = now + 120;
+            menuMoved = moveMenuFocus(navDirection);
+          } else {
+            padNavDirection = navDirection;
+          }
+
+          if (!menuMoved && pressedThisFrame(0)) {
+            commandHandled = activateFocusedMenuButton(now);
+          }
+        } else {
+          padNavDirection = navDirection;
+          if (!navDirection) padMenuArmed = true;
+        }
+
+        const gameplayNeutral = Math.abs(axisX) < .22
+          && !currentButtons[0]
+          && !currentButtons[1]
+          && !currentButtons[6]
+          && !currentButtons[7]
+          && !currentButtons[12]
+          && !currentButtons[13]
+          && !currentButtons[14]
+          && !currentButtons[15]
+          && padButtonValue(pad, 6) < .12
+          && padButtonValue(pad, 7) < .12;
+
+        if (!padGameplayArmed && gameplayNeutral) padGameplayArmed = true;
+
+        if (mode === 'running' && modeAtPollStart === 'running' && !commandHandled && padGameplayArmed) {
+          const analogSteer = stickWithDeadzone(axisX);
+          gamepadInput.digitalSteer = dpadX;
+          gamepadInput.analogSteer = Math.sign(analogSteer) * Math.pow(Math.abs(analogSteer), 1.35);
+          gamepadInput.boost = currentButtons[0] || currentButtons[12] || padButtonValue(pad, 7) >= .18;
+          gamepadInput.brake = currentButtons[1] || currentButtons[13] || padButtonValue(pad, 6) >= .18;
+        } else {
+          clearGamepadOutput();
+        }
+
+        previousPadButtons = currentButtons;
+
+        if (mode !== modeAtPollStart && (mode === 'ready' || mode === 'paused' || mode === 'over')) {
+          focusMenuButton(menuButtonsForMode()[0], true);
+          padMenuArmed = false;
+        }
+      }
+
+      function setGameplayControlsActive(active) {
+        touchControls.inert = !active;
+        touchControls.setAttribute('aria-hidden', String(!active));
+        frame.tabIndex = active ? 0 : -1;
+      }
+
+      function returnToTitle() {
+        mode = 'ready';
+        clearInput();
+        clearControllerSelection();
+        score = 0;
+        scrollDistance = 0;
+        scrollSpeed = BASE_SCROLL_SPEED;
+        topSpeed = BASE_SCROLL_SPEED;
+        lives = 3;
+        gatesCleared = 0;
+        entities = [];
+        particles = [];
+        tracks = [];
+        courseSections = [];
+        trackClock = 0;
+        nextBandDistance = 0;
+        lastBandDistance = 0;
+        player.x = WIDTH / 2;
+        player.vx = 0;
+        player.lean = 0;
+        safeCorridorX = player.x;
+        corridorTargetX = player.x;
+        courseSlope = 0;
+        nextTurnDistance = 0;
+        previousCourseCenters = [player.x];
+        previousCourseHalfWidth = COURSE_HALF_WIDTH;
+        forkState = null;
+        nextForkDistance = 1000;
+        waxTimer = 0;
+        iceTimer = 0;
+        iceRecoveryTimer = 0;
+        invulnerableTimer = 0;
+        crashFreezeTimer = 0;
+        endingTimer = 0;
+        toastTimer = 0;
+        accumulator = 0;
+        padMenuArmed = false;
+        startScreen.hidden = false;
+        pauseScreen.hidden = true;
+        gameOverScreen.hidden = true;
+        hud.hidden = true;
+        hud.setAttribute('aria-hidden', 'true');
+        effectChip.hidden = true;
+        toast.className = 'toast';
+        toast.textContent = '';
+        edgeFlash.classList.remove('show');
+        pauseButton.disabled = true;
+        pauseButton.textContent = 'Pause';
+        setGameplayControlsActive(false);
+        startBestEl.textContent = formatScore(bestScore);
+        highScoreEl.textContent = formatScore(bestScore);
+        lastTime = performance.now();
+        startButton.focus({ preventScroll: true });
+        announce('Title menu. Press A or Cross to start with a controller.');
+      }
+
+      function resetGame() {
+        runNumber += 1;
+        score = 0;
+        scrollDistance = 0;
+        scrollSpeed = BASE_SCROLL_SPEED;
+        topSpeed = BASE_SCROLL_SPEED;
+        lives = 3;
+        gatesCleared = 0;
+        entities = [];
+        particles = [];
+        tracks = [];
+        courseSections = [];
+        trackClock = 0;
+        player.x = WIDTH / 2;
+        player.vx = 0;
+        player.lean = 0;
+        safeCorridorX = player.x;
+        corridorTargetX = player.x;
+        courseSlope = 0;
+        nextTurnDistance = 0;
+        previousCourseCenters = [player.x];
+        previousCourseHalfWidth = COURSE_HALF_WIDTH;
+        forkState = null;
+        nextForkDistance = random(980, 1280);
+        waxTimer = 0;
+        iceTimer = 0;
+        iceRecoveryTimer = 0;
+        invulnerableTimer = 0;
+        crashFreezeTimer = 0;
+        endingTimer = 0;
+        toastTimer = 0;
+        peakCourseAnnounced = false;
+        lastGateDistance = -1000;
+        lastPickupDistance = -1000;
+        lastBandDistance = 0;
+        nextBandDistance = 255;
+        accumulator = 0;
+        clearInput();
+        clearControllerSelection();
+        padMenuArmed = false;
+        toast.className = 'toast';
+        toast.textContent = '';
+
+        let initialBands = 0;
+        while (nextBandDistance < scrollDistance + HEIGHT - PLAYER_Y + 110 && initialBands < 12) {
+          spawnBand(nextBandDistance);
+          lastBandDistance = nextBandDistance;
+          nextBandDistance += bandGap();
+          initialBands += 1;
+        }
+
+        mode = 'running';
+        startScreen.hidden = true;
+        pauseScreen.hidden = true;
+        gameOverScreen.hidden = true;
+        hud.hidden = false;
+        hud.setAttribute('aria-hidden', 'false');
+        pauseButton.disabled = false;
+        pauseButton.textContent = 'Pause';
+        setGameplayControlsActive(true);
+        runNumberEl.textContent = String(runNumber).padStart(2, '0');
+        updateHud();
+        frame.focus({ preventScroll: true });
+        announce('Run started. Three lives remaining.');
+      }
+
+      function bandGap() {
+        const waves = clamp(score / 500, 0, MAX_DIFFICULTY_WAVE + 2);
+        const scaled = 172 / Math.pow(1.035, waves);
+        return clamp(scaled + random(-16, 18), 92, 188);
+      }
+
+      function hazardRadius(type, scale) {
+        return type === 'tree' ? 18 * scale : 23 * scale;
+      }
+
+      function smoothstep01(value) {
+        const t = clamp(value, 0, 1);
+        return t * t * (3 - 2 * t);
+      }
+
+      function chooseCorridorTarget(fromX, distance, steerTowardCenter = false) {
+        let candidate;
+        if (steerTowardCenter) {
+          candidate = random(300, 500);
+        } else {
+          const direction = fromX < 245 ? 1 : fromX > 555 ? -1 : (Math.random() < .5 ? -1 : 1);
+          candidate = clamp(fromX + direction * random(170, 290), 106, WIDTH - 106);
+          if (Math.abs(candidate - fromX) < 135) {
+            candidate = clamp(fromX + direction * 180, 106, WIDTH - 106);
+          }
+        }
+        corridorTargetX = candidate;
+        nextTurnDistance = distance + random(680, 980);
+      }
+
+      function startCourseFork(distance, center) {
+        const split = 520;
+        const hold = 280;
+        const merge = 520;
+        forkState = {
+          startDistance: distance,
+          split,
+          hold,
+          merge,
+          spread: random(102, 112)
+        };
+        corridorTargetX = clamp(center + random(-66, 66), 235, WIDTH - 235);
+        nextTurnDistance = distance + split + hold + merge;
+        showToast('Fork ahead · pick a line', 'bonus');
+        announce('Course fork ahead. Choose either open line.');
+      }
+
+      function forkOffsetAt(distance, fork) {
+        const elapsed = Math.max(0, distance - fork.startDistance);
+        if (elapsed < fork.split) return fork.spread * smoothstep01(elapsed / fork.split);
+        if (elapsed < fork.split + fork.hold) return fork.spread;
+        return fork.spread * (1 - smoothstep01((elapsed - fork.split - fork.hold) / fork.merge));
+      }
+
+      function connectCourseCenters(previousCenters, currentCenters, halfWidth) {
+        const previous = [...previousCenters].sort((a, b) => a - b);
+        const current = [...currentCenters].sort((a, b) => a - b);
+        if (previous.length === 1 && current.length === 2) {
+          return current.map((to) => ({ from: previous[0], to, half: halfWidth }));
+        }
+        if (previous.length === 2 && current.length === 1) {
+          return previous.map((from) => ({ from, to: current[0], half: halfWidth }));
+        }
+        if (previous.length === 2 && current.length === 2) {
+          return [
+            { from: previous[0], to: current[0], half: halfWidth },
+            { from: previous[1], to: current[1], half: halfWidth }
+          ];
+        }
+        return [{ from: previous[0], to: current[0], half: halfWidth }];
+      }
+
+      function mergedSafeIntervals(centers, halfWidth) {
+        const intervals = centers
+          .map((center) => ({ min: center - halfWidth, max: center + halfWidth }))
+          .sort((a, b) => a.min - b.min);
+        const merged = [];
+        for (const interval of intervals) {
+          const last = merged[merged.length - 1];
+          if (last && interval.min <= last.max + 26) last.max = Math.max(last.max, interval.max);
+          else merged.push({ ...interval });
+        }
+        return merged;
+      }
+
+      function outsideCoursePaths(x, radius, paths) {
+        return paths.every((path) => {
+          const min = Math.min(path.from, path.to) - path.half;
+          const max = Math.max(path.from, path.to) + path.half;
+          return x + radius + 10 < min || x - radius - 10 > max;
+        });
+      }
+
+      function placeHazard(x, distance, placed, type, scale) {
+        const radius = hazardRadius(type, scale);
+        if (!Number.isFinite(x) || x < 25 + radius || x > WIDTH - 25 - radius) return false;
+        if (!placed.every((other) => Math.abs(x - other.x) > radius + other.radius + 11)) return false;
+        placed.push({ x, radius });
+        entities.push({
+          kind: type,
+          x,
+          distance: distance + random(-9, 9),
+          scale,
+          variant: Math.random(),
+          dead: false
+        });
+        return true;
+      }
+
+      function spawnBand(distance) {
+        const gap = Math.max(80, distance - lastBandDistance);
+        const previousTrunk = Number.isFinite(safeCorridorX) ? safeCorridorX : WIDTH / 2;
+        if (!Number.isFinite(courseSlope)) courseSlope = 0;
+        if (!Number.isFinite(corridorTargetX)) corridorTargetX = previousTrunk;
+        if (!Number.isFinite(nextTurnDistance)) nextTurnDistance = distance;
+        if (!Number.isFinite(nextForkDistance)) nextForkDistance = distance + 1200;
+
+        const forkDue = !forkState && distance >= nextForkDistance;
+        if (iceTimer <= 0 && forkDue && previousTrunk >= 225 && previousTrunk <= WIDTH - 225) {
+          startCourseFork(distance, previousTrunk);
+        }
+
+        if (iceTimer <= 0 && !forkState && (distance >= nextTurnDistance || Math.abs(corridorTargetX - previousTrunk) < 26)) {
+          chooseCorridorTarget(previousTrunk, distance, forkDue);
+        } else if (iceTimer <= 0 && forkDue && (corridorTargetX < 260 || corridorTargetX > WIDTH - 260)) {
+          chooseCorridorTarget(previousTrunk, distance, true);
+        }
+
+        const estimatedMaxSpeed = Math.max(scrollSpeed, baseSpeed() * 1.52);
+        const maxSlope = clamp((330 / Math.max(1, estimatedMaxSpeed)) * .42, .18, .34);
+
+        if (iceTimer > 0) {
+          safeCorridorX = clamp(player.x, 92, WIDTH - 92);
+          corridorTargetX = safeCorridorX;
+          courseSlope = 0;
+          forkState = null;
+        } else {
+          const desiredSlope = clamp((corridorTargetX - previousTrunk) / 480, -maxSlope, maxSlope);
+          courseSlope = approach(courseSlope, desiredSlope, .0035, gap);
+          if (forkState) courseSlope = clamp(courseSlope, -.075, .075);
+          safeCorridorX = clamp(previousTrunk + courseSlope * gap, 106, WIDTH - 106);
+          if (safeCorridorX === 106 || safeCorridorX === WIDTH - 106) courseSlope *= .35;
+        }
+
+        let currentHalfWidth = forkState ? FORK_HALF_WIDTH : COURSE_HALF_WIDTH;
+        let currentCenters = [safeCorridorX];
+        let endingFork = false;
+
+        if (forkState) {
+          const total = forkState.split + forkState.hold + forkState.merge;
+          const elapsed = distance - forkState.startDistance;
+          const offset = forkOffsetAt(distance, forkState);
+          if (offset > 1) currentCenters = [safeCorridorX - offset, safeCorridorX + offset];
+          endingFork = elapsed >= total;
+        }
+
+        currentCenters = currentCenters.map((center) => clamp(center, 72, WIDTH - 72));
+        const pathHalfWidth = Math.max(previousCourseHalfWidth, currentHalfWidth);
+        const paths = connectCourseCenters(previousCourseCenters, currentCenters, pathHalfWidth);
+        courseSections.push({
+          fromDistance: lastBandDistance,
+          distance,
+          paths: paths.map((path) => ({ ...path }))
+        });
+
+        const intervals = mergedSafeIntervals(currentCenters, currentHalfWidth);
+        const placed = [];
+
+        for (const interval of intervals) {
+          for (const side of [-1, 1]) {
+            const type = Math.random() < .76 ? 'tree' : 'rock';
+            const scale = random(.86, 1.08);
+            const radius = hazardRadius(type, scale);
+            const edge = side < 0 ? interval.min : interval.max;
+            placeHazard(edge + side * (radius + 12), distance, placed, type, scale);
+          }
+        }
+
+        for (const edgeX of [52, WIDTH - 52]) {
+          const type = Math.random() < .72 ? 'tree' : 'rock';
+          const scale = random(.84, 1.08);
+          const radius = hazardRadius(type, scale);
+          const x = edgeX + random(-7, 7);
+          if (outsideCoursePaths(x, radius, paths)) placeHazard(x, distance, placed, type, scale);
+        }
+
+        const densityLevel = clamp(score / 500, 0, MAX_DIFFICULTY_WAVE + 2);
+        const forestSpacing = clamp(148 - densityLevel * 2.35, 92, 148);
+        const unsafeSpans = [];
+        let spanStart = 28;
+        for (const interval of intervals) {
+          if (interval.min > spanStart) unsafeSpans.push({ min: spanStart, max: interval.min });
+          spanStart = Math.max(spanStart, interval.max);
+        }
+        if (spanStart < WIDTH - 28) unsafeSpans.push({ min: spanStart, max: WIDTH - 28 });
+
+        for (const span of unsafeSpans) {
+          const width = span.max - span.min;
+          const count = Math.floor(width / forestSpacing);
+          for (let index = 0; index < count; index += 1) {
+            const type = Math.random() < .68 ? 'tree' : 'rock';
+            const scale = random(.82, 1.16);
+            const radius = hazardRadius(type, scale);
+            const cellWidth = width / count;
+            const center = span.min + cellWidth * (index + .5);
+            const x = center + random(-Math.min(14, cellWidth * .18), Math.min(14, cellWidth * .18));
+            if (outsideCoursePaths(x, radius, paths)) placeHazard(x, distance, placed, type, scale);
+          }
+        }
+
+        const featureCenter = currentCenters[Math.floor(random(0, currentCenters.length))] || safeCorridorX;
+        const canPlaceGate = distance - lastGateDistance > 540;
+        const canPlacePickup = distance - lastPickupDistance > 680;
+        const featureRoll = Math.random();
+
+        if (canPlaceGate && featureRoll < .19) {
+          const opening = random(108, 122);
+          entities.push({
+            kind: 'gate',
+            x: featureCenter,
+            distance: distance + random(-5, 7),
+            opening,
+            resolved: false,
+            flash: 0,
+            dead: false
+          });
+          lastGateDistance = distance;
+        } else if (canPlacePickup && featureRoll > .79) {
+          const iceProtected = iceTimer > 0 || iceRecoveryTimer > 0 || Boolean(forkState);
+          const kind = Math.random() < .58 || iceProtected ? 'wax' : 'ice';
+          entities.push({
+            kind,
+            x: clamp(featureCenter + random(-25, 25), 42, WIDTH - 42),
+            distance,
+            phase: random(0, Math.PI * 2),
+            dead: false
+          });
+          lastPickupDistance = distance;
+        }
+
+        previousCourseCenters = currentCenters;
+        previousCourseHalfWidth = currentHalfWidth;
+
+        if (endingFork) {
+          forkState = null;
+          previousCourseCenters = [safeCorridorX];
+          previousCourseHalfWidth = COURSE_HALF_WIDTH;
+          nextForkDistance = distance + random(1900, 2700);
+          chooseCorridorTarget(safeCorridorX, distance);
+        }
+      }
+
+      function lockIceCorridor() {
+        safeCorridorX = clamp(player.x, 92, WIDTH - 92);
+        corridorTargetX = safeCorridorX;
+        courseSlope = 0;
+        nextTurnDistance = scrollDistance + 420;
+        previousCourseCenters = [safeCorridorX];
+        previousCourseHalfWidth = COURSE_HALF_WIDTH;
+        forkState = null;
+        nextForkDistance = scrollDistance + 1800;
+        courseSections = courseSections.filter((section) => section.distance <= scrollDistance);
+        for (const entity of entities) {
+          if ((entity.kind !== 'tree' && entity.kind !== 'rock') || entity.dead) continue;
+          const screenY = PLAYER_Y + entity.distance - scrollDistance;
+          if (screenY < PLAYER_Y - 45 || screenY > HEIGHT + 120) continue;
+          const radius = hazardRadius(entity.kind, entity.scale);
+          if (Math.abs(entity.x - player.x) < radius + 56) entity.dead = true;
+        }
+      }
+
+      function activateWax() {
+        waxTimer = 6;
+        showToast('Waxed skis · snappy steering · score ×2', 'bonus');
+        announce('Waxed Skis collected. Sharp steering and double score for six seconds.');
+      }
+
+      function activateIce() {
+        if (iceTimer > 0 || iceRecoveryTimer > 0) {
+          const protectedBonus = waxTimer > 0 ? 150 : 75;
+          score = Math.min(Number.MAX_SAFE_INTEGER, score + protectedBonus);
+          showToast(`Ice shattered · protected +${protectedBonus}`, 'bonus');
+          return;
+        }
+        iceTimer = THIN_ICE_DURATION;
+        iceRecoveryTimer = 0;
+        player.vx = 0;
+        clearInput();
+        scrollSpeed = Math.min(MAX_SCROLL_SPEED, Math.max(scrollSpeed, baseSpeed() * 1.52));
+        for (const entity of entities) {
+          if (entity.kind === 'ice' && !entity.dead) entity.kind = 'wax';
+        }
+        lockIceCorridor();
+        showToast('Thin ice · steering locked · max pace', 'danger');
+        announce('Thin Ice. Steering disabled and maximum speed forced for three seconds.');
+      }
+
+      function addCrashParticles(x, y) {
+        const count = reducedMotion ? 7 : 18;
+        for (let index = 0; index < count; index += 1) {
+          const angle = random(Math.PI * 1.08, Math.PI * 1.92);
+          const force = random(45, 155);
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * force,
+            vy: Math.sin(angle) * force - 25,
+            life: random(.35, .8),
+            size: random(2, 5),
+            color: Math.random() < .78 ? COLORS.snowBlue : COLORS.sunset
+          });
+        }
+      }
+
+      function crash(entity) {
+        if (invulnerableTimer > 0 || endingTimer > 0) return;
+        entity.dead = true;
+        lives -= 1;
+        invulnerableTimer = 1.45;
+        crashFreezeTimer = reducedMotion ? .04 : .12;
+        player.vx = 0;
+        scrollSpeed *= .62;
+        addCrashParticles(player.x, PLAYER_Y + 12);
+        edgeFlash.classList.remove('show');
+        void edgeFlash.offsetWidth;
+        edgeFlash.classList.add('show');
+        window.setTimeout(() => edgeFlash.classList.remove('show'), 380);
+
+        if (navigator.vibrate) navigator.vibrate(45);
+
+        if (lives <= 0) {
+          endingTimer = .65;
+          showToast('Final crash · run over', 'danger');
+          announce('Final crash. Run over.');
+        } else {
+          showToast(`Crash · ${lives} ${lives === 1 ? 'life' : 'lives'} left`, 'danger');
+          announce(`Crash. ${lives} ${lives === 1 ? 'life remains' : 'lives remain'}.`);
+        }
+      }
+
+      function sweptEllipseHit(entity, previousY, currentY, radiusX, radiusY) {
+        const minY = Math.min(previousY, currentY);
+        const maxY = Math.max(previousY, currentY);
+        const closestY = clamp(PLAYER_Y, minY, maxY);
+        const dx = (player.x - entity.x) / (radiusX + PLAYER_HALF_W);
+        const dy = (PLAYER_Y - closestY) / (radiusY + PLAYER_HALF_H);
+        return dx * dx + dy * dy <= 1;
+      }
+
+      function sweptRectHit(entity, previousY, currentY, halfW, halfH) {
+        const horizontal = Math.abs(player.x - entity.x) <= halfW + PLAYER_HALF_W;
+        const minY = Math.min(previousY, currentY) - halfH;
+        const maxY = Math.max(previousY, currentY) + halfH;
+        const vertical = minY <= PLAYER_Y + PLAYER_HALF_H && maxY >= PLAYER_Y - PLAYER_HALF_H;
+        return horizontal && vertical;
+      }
+
+      function collectPickup(entity) {
+        entity.dead = true;
+        if (entity.kind === 'wax') activateWax();
+        else activateIce();
+      }
+
+      function processEntities(previousDistance) {
+        const previousCamera = previousDistance;
+        const currentCamera = scrollDistance;
+
+        // Pickups resolve before hazards so Thin Ice can clear a fair straight corridor immediately.
+        for (const entity of entities) {
+          if (entity.dead || (entity.kind !== 'wax' && entity.kind !== 'ice')) continue;
+          const previousY = PLAYER_Y + entity.distance - previousCamera;
+          const currentY = PLAYER_Y + entity.distance - currentCamera;
+          if (previousY > ENTITY_ENTRY_LIMIT) continue;
+          if (sweptEllipseHit(entity, previousY, currentY, 17, 17)) collectPickup(entity);
+        }
+
+        for (const entity of entities) {
+          if (entity.dead) continue;
+          const previousY = PLAYER_Y + entity.distance - previousCamera;
+          const currentY = PLAYER_Y + entity.distance - currentCamera;
+          if (previousY > ENTITY_ENTRY_LIMIT) continue;
+
+          if (entity.kind === 'gate' && !entity.resolved && previousY > PLAYER_Y && currentY <= PLAYER_Y) {
+            entity.resolved = true;
+            const clearance = entity.opening / 2 - PLAYER_HALF_W - 5;
+            if (Math.abs(player.x - entity.x) <= clearance) {
+              const bonus = Math.round(750 * (waxTimer > 0 ? 2 : 1));
+              score = Math.min(Number.MAX_SAFE_INTEGER, score + bonus);
+              gatesCleared += 1;
+              entity.flash = .48;
+              showToast(`Clean gate · +${bonus}`, 'bonus');
+              announce(`Clean slalom gate. ${bonus} point bonus.`);
+            } else {
+              showToast('Gate missed · find the center line');
+            }
+          }
+
+          if (invulnerableTimer > 0 || endingTimer > 0) continue;
+
+          if (entity.kind === 'tree') {
+            const scale = entity.scale;
+            if (sweptRectHit(entity, previousY + 5 * scale, currentY + 5 * scale, 15 * scale, 25 * scale)) {
+              crash(entity);
+              break;
+            }
+          } else if (entity.kind === 'rock') {
+            const scale = entity.scale;
+            if (sweptEllipseHit(entity, previousY + 5 * scale, currentY + 5 * scale, 22 * scale, 13 * scale)) {
+              crash(entity);
+              break;
+            }
+          }
+        }
+
+        for (const entity of entities) {
+          if (entity.flash > 0) entity.flash = Math.max(0, entity.flash - FIXED_STEP);
+        }
+
+        entities = entities.filter((entity) => {
+          const screenY = PLAYER_Y + entity.distance - scrollDistance;
+          return !entity.dead && screenY > -110;
+        });
+      }
+
+      function updateParticles(dt) {
+        for (const particle of particles) {
+          particle.x += particle.vx * dt;
+          particle.y += particle.vy * dt;
+          particle.vy += 190 * dt;
+          particle.life -= dt;
+        }
+        particles = particles.filter((particle) => particle.life > 0);
+      }
+
+      function updateTrack(dt) {
+        trackClock -= dt;
+        if (trackClock <= 0) {
+          tracks.push({ x: player.x, distance: scrollDistance });
+          trackClock = .045;
+        }
+        tracks = tracks.filter((point) => PLAYER_Y + point.distance - scrollDistance > -35);
+      }
+
+      function update(dt) {
+        if (mode !== 'running') return;
+
+        if (crashFreezeTimer > 0) {
+          crashFreezeTimer = Math.max(0, crashFreezeTimer - dt);
+          updateParticles(dt * .45);
+          return;
+        }
+
+        if (endingTimer > 0) {
+          endingTimer = Math.max(0, endingTimer - dt);
+          updateParticles(dt);
+          if (endingTimer === 0) finishGame();
+          return;
+        }
+
+        const previousDistance = scrollDistance;
+        waxTimer = Math.max(0, waxTimer - dt);
+        iceRecoveryTimer = Math.max(0, iceRecoveryTimer - dt);
+        const iceWasActive = iceTimer > 0;
+        iceTimer = Math.max(0, iceTimer - dt);
+        if (iceWasActive && iceTimer === 0) {
+          iceRecoveryTimer = THIN_ICE_RECOVERY;
+          courseSlope = 0;
+          nextTurnDistance = scrollDistance;
+          showToast(`Edges back · ice safe ${THIN_ICE_RECOVERY}s`, 'bonus');
+          announce(`Steering restored. Thin Ice protection active for ${THIN_ICE_RECOVERY} seconds.`);
+        }
+        invulnerableTimer = Math.max(0, invulnerableTimer - dt);
+        toastTimer = Math.max(0, toastTimer - dt);
+        if (toastTimer === 0) toast.classList.remove('show');
+
+        const waxed = waxTimer > 0;
+        const keyboardSteer = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
+        const requestedDigitalSteer = keyboardSteer || gamepadInput.digitalSteer;
+        let steer = gamepadInput.analogSteer;
+
+        if (requestedDigitalSteer) {
+          if (requestedDigitalSteer !== digitalSteerDirection) {
+            digitalSteerDirection = requestedDigitalSteer;
+            digitalSteerTime = 0;
+          }
+          digitalSteerTime += dt;
+          const rampDuration = waxed ? .16 : .22;
+          const minimumStrength = waxed ? .32 : .28;
+          const heldStrength = smoothstep01(digitalSteerTime / rampDuration);
+          steer = requestedDigitalSteer * (minimumStrength + (1 - minimumStrength) * heldStrength);
+        } else {
+          digitalSteerDirection = 0;
+          digitalSteerTime = 0;
+        }
+
+        if (iceTimer > 0) steer = 0;
+
+        const paceSteerScale = clamp(Math.sqrt(Math.max(1, scrollSpeed / BASE_SCROLL_SPEED)), 1, 1.18);
+        const maxLateralSpeed = (waxed ? 470 : 330) * paceSteerScale;
+        const targetVx = steer * maxLateralSpeed;
+        const reversing = steer && player.vx && Math.sign(steer) !== Math.sign(player.vx);
+        const response = reversing ? (waxed ? 30 : 24) : steer ? (waxed ? 17 : 11) : (waxed ? 30 : 24);
+        player.vx = approach(player.vx, targetVx, response, dt);
+        if (!steer && Math.abs(player.vx) < .08) player.vx = 0;
+        player.x += player.vx * dt;
+
+        const playerMargin = PLAYER_HALF_W + 12;
+        if (player.x < playerMargin || player.x > WIDTH - playerMargin) {
+          player.x = clamp(player.x, playerMargin, WIDTH - playerMargin);
+          player.vx = 0;
+        }
+        player.lean = approach(player.lean, clamp(player.vx / maxLateralSpeed, -1, 1), 12, dt);
+
+        let paceFactor = 1;
+        const braking = held.has('brake') || gamepadInput.brake;
+        const boosting = held.has('boost') || gamepadInput.boost;
+        if (iceTimer > 0) paceFactor = 1.52;
+        else if (braking) paceFactor = .6;
+        else if (boosting) paceFactor = 1.45;
+
+        const targetSpeed = Math.min(MAX_SCROLL_SPEED, baseSpeed() * paceFactor);
+        scrollSpeed = clamp(approach(scrollSpeed, targetSpeed, iceTimer > 0 ? 7 : 3.7, dt), 0, MAX_SCROLL_SPEED);
+        topSpeed = Math.max(topSpeed, scrollSpeed);
+        scrollDistance += scrollSpeed * dt;
+
+        const survivalRate = 11.5;
+        score = Math.min(Number.MAX_SAFE_INTEGER, score + survivalRate * Math.max(.55, speedMultiplier()) * (waxed ? 2 : 1) * dt);
+
+        if (iceTimer > 0) lockIceCorridor();
+
+        const spawnHorizon = scrollDistance + HEIGHT - PLAYER_Y + 30;
+        if (!Number.isFinite(nextBandDistance) || nextBandDistance <= scrollDistance) {
+          const recoveryGap = bandGap();
+          lastBandDistance = spawnHorizon - recoveryGap;
+          nextBandDistance = spawnHorizon;
+          previousCourseCenters = [safeCorridorX];
+          previousCourseHalfWidth = COURSE_HALF_WIDTH;
+        }
+
+        const spawnLimit = scrollDistance + HEIGHT - PLAYER_Y + 110;
+        let spawnedBands = 0;
+        while (nextBandDistance < spawnLimit && spawnedBands < 12) {
+          spawnBand(nextBandDistance);
+          lastBandDistance = nextBandDistance;
+          nextBandDistance += bandGap();
+          spawnedBands += 1;
+        }
+        if (spawnedBands === 12 && nextBandDistance < spawnLimit) {
+          // Never instantiate missed rows behind the skier. If corrupted
+          // state exhausts the frame budget, resume at the visible horizon.
+          const recoveryGap = bandGap();
+          lastBandDistance = spawnHorizon - recoveryGap;
+          nextBandDistance = spawnHorizon;
+          previousCourseCenters = [safeCorridorX];
+          previousCourseHalfWidth = COURSE_HALF_WIDTH;
+        }
+
+        processEntities(previousDistance);
+        courseSections = courseSections.filter((section) => PLAYER_Y + section.distance - scrollDistance > -160);
+        updateTrack(dt);
+        updateParticles(dt);
+
+        if (atMaximumCoursePace() && !peakCourseAnnounced && toastTimer === 0 && invulnerableTimer === 0 && iceTimer === 0) {
+          peakCourseAnnounced = true;
+          showToast('Peak course · maximum difficulty', 'bonus');
+          announce('Peak course reached. Mountain speed and obstacle density are at maximum difficulty.');
+        }
+      }
+
+      function drawSnowfield(time) {
+        ctx.fillStyle = COLORS.snow;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        ctx.save();
+        ctx.strokeStyle = COLORS.snowBlue;
+        ctx.fillStyle = '#eaf5f5';
+        ctx.lineWidth = 2;
+        const drift = scrollDistance * .42;
+        for (let index = 0; index < 29; index += 1) {
+          const x = (index * 173 + 61) % WIDTH;
+          const y = ((index * 97 - drift) % (HEIGHT + 90) + HEIGHT + 90) % (HEIGHT + 90) - 45;
+          if (index % 3 === 0) {
+            ctx.fillRect(Math.round(x), Math.round(y), 3, 3);
+            ctx.fillRect(Math.round(x + 6), Math.round(y + 2), 2, 2);
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(Math.round(x - 10), Math.round(y));
+            ctx.lineTo(Math.round(x + 13 + (index % 4) * 4), Math.round(y));
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+
+        if (!reducedMotion) {
+          ctx.save();
+          ctx.globalAlpha = .22;
+          ctx.fillStyle = COLORS.seaGlass;
+          for (let index = 0; index < 8; index += 1) {
+            const x = ((time * .015 + index * 131) % (WIDTH + 60)) - 30;
+            const y = 95 + ((index * 83 + scrollDistance * .19) % 470);
+            ctx.fillRect(Math.round(x), Math.round(y), 8 + (index % 3) * 5, 1);
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawTracks() {
+        if (tracks.length < 2) return;
+        ctx.save();
+        ctx.strokeStyle = '#cfe4e5';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([9, 6]);
+        for (const offset of [-7, 7]) {
+          ctx.beginPath();
+          let started = false;
+          for (const point of tracks) {
+            const y = PLAYER_Y + point.distance - scrollDistance;
+            if (!started) {
+              ctx.moveTo(Math.round(point.x + offset), Math.round(y));
+              started = true;
+            } else {
+              ctx.lineTo(Math.round(point.x + offset), Math.round(y));
+            }
+          }
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      function drawCourse() {
+        if (!courseSections.length) return;
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        for (const section of courseSections) {
+          const fromY = PLAYER_Y + section.fromDistance - scrollDistance;
+          const toY = PLAYER_Y + section.distance - scrollDistance;
+          if (toY < -170 || fromY > HEIGHT + 170) continue;
+          for (const path of section.paths) {
+            ctx.strokeStyle = '#eff8f5';
+            ctx.lineWidth = path.half * 2;
+            ctx.beginPath();
+            ctx.moveTo(path.from, fromY);
+            ctx.lineTo(path.to, toY);
+            ctx.stroke();
+          }
+        }
+
+        ctx.strokeStyle = 'rgba(47, 118, 110, .18)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([11, 15]);
+        for (const section of courseSections) {
+          const fromY = PLAYER_Y + section.fromDistance - scrollDistance;
+          const toY = PLAYER_Y + section.distance - scrollDistance;
+          if (toY < -170 || fromY > HEIGHT + 170) continue;
+          for (const path of section.paths) {
+            ctx.beginPath();
+            ctx.moveTo(path.from, fromY);
+            ctx.lineTo(path.to, toY);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawTree(entity, y) {
+        const scale = entity.scale;
+        const x = Math.round(entity.x);
+        y = Math.round(y);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        ctx.fillStyle = 'rgba(8, 44, 58, .12)';
+        ctx.beginPath();
+        ctx.ellipse(6, 27, 24, 7, -.12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#755640';
+        ctx.fillRect(-4, 13, 8, 24);
+        ctx.strokeStyle = COLORS.navy;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-4, 13, 8, 24);
+
+        const sway = entity.variant > .5 ? 2 : -1;
+        ctx.fillStyle = COLORS.seaGlassDark;
+        ctx.strokeStyle = COLORS.navy;
+        ctx.lineJoin = 'miter';
+        ctx.beginPath();
+        ctx.moveTo(sway, -38);
+        ctx.lineTo(-18, -8);
+        ctx.lineTo(-9, -8);
+        ctx.lineTo(-27, 14);
+        ctx.lineTo(27, 14);
+        ctx.lineTo(10, -8);
+        ctx.lineTo(19, -8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = COLORS.seaGlass;
+        ctx.beginPath();
+        ctx.moveTo(sway, -34);
+        ctx.lineTo(-12, -10);
+        ctx.lineTo(-2, -10);
+        ctx.lineTo(-16, 8);
+        ctx.lineTo(-4, 8);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = COLORS.snow;
+        ctx.fillRect(-11, -10, 10, 3);
+        ctx.fillRect(-19, 10, 14, 3);
+        ctx.restore();
+      }
+
+      function drawRock(entity, y) {
+        const scale = entity.scale;
+        const x = Math.round(entity.x);
+        y = Math.round(y);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        ctx.fillStyle = 'rgba(8, 44, 58, .11)';
+        ctx.beginPath();
+        ctx.ellipse(5, 15, 27, 7, -.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = COLORS.slate;
+        ctx.strokeStyle = COLORS.navyDeep;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-24, 9);
+        ctx.lineTo(-16, -9);
+        ctx.lineTo(-3, -17);
+        ctx.lineTo(15, -11);
+        ctx.lineTo(24, 6);
+        ctx.lineTo(15, 14);
+        ctx.lineTo(-15, 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#91a0a5';
+        ctx.beginPath();
+        ctx.moveTo(-14, -7);
+        ctx.lineTo(-3, -14);
+        ctx.lineTo(4, -3);
+        ctx.lineTo(-8, 4);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = COLORS.slateDark;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(5, -3);
+        ctx.lineTo(14, 7);
+        ctx.lineTo(5, 11);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawGate(entity, y) {
+        const half = entity.opening / 2;
+        const flash = entity.flash > 0;
+        ctx.save();
+        ctx.translate(Math.round(entity.x), Math.round(y));
+
+        if (flash) {
+          ctx.globalAlpha = .2 + entity.flash * .7;
+          ctx.fillStyle = COLORS.brass;
+          ctx.fillRect(-half + 6, -35, entity.opening - 12, 70);
+          ctx.globalAlpha = 1;
+        }
+
+        for (const side of [-1, 1]) {
+          const x = side * half;
+          ctx.fillStyle = 'rgba(8, 44, 58, .1)';
+          ctx.beginPath();
+          ctx.ellipse(x + 3, 22, 9, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = COLORS.navy;
+          ctx.fillRect(x - 2, -32, 4, 61);
+          ctx.fillStyle = side < 0 ? COLORS.sunset : COLORS.brass;
+          ctx.strokeStyle = COLORS.navy;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x + (side < 0 ? 0 : -1), -30);
+          ctx.lineTo(x + side * 20, -22);
+          ctx.lineTo(x + (side < 0 ? 0 : -1), -13);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        if (!entity.resolved) {
+          ctx.fillStyle = COLORS.navy;
+          ctx.font = '900 10px ui-monospace, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('+750', 0, 34);
+        }
+        ctx.restore();
+      }
+
+      function drawPickup(entity, y, time) {
+        const isWax = entity.kind === 'wax';
+        const pulse = reducedMotion ? 1 : 1 + Math.sin(time * .006 + entity.phase) * .08;
+        ctx.save();
+        ctx.translate(Math.round(entity.x), Math.round(y));
+        ctx.scale(pulse, pulse);
+
+        ctx.fillStyle = 'rgba(8, 44, 58, .13)';
+        ctx.beginPath();
+        ctx.ellipse(4, 23, 21, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = isWax ? '#fff0bd' : '#c6f1f5';
+        ctx.strokeStyle = COLORS.navy;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 19, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = isWax ? COLORS.brass : '#64bfc9';
+        ctx.beginPath();
+        if (isWax) {
+          ctx.moveTo(0, -12);
+          ctx.lineTo(10, 0);
+          ctx.lineTo(0, 12);
+          ctx.lineTo(-10, 0);
+        } else {
+          ctx.moveTo(-11, -8);
+          ctx.lineTo(9, -11);
+          ctx.lineTo(12, 8);
+          ctx.lineTo(-7, 12);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = COLORS.navy;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (isWax) {
+          ctx.moveTo(-5, -4);
+          ctx.lineTo(5, 4);
+          ctx.moveTo(5, -4);
+          ctx.lineTo(-5, 4);
+        } else {
+          ctx.moveTo(-3, -9);
+          ctx.lineTo(2, -2);
+          ctx.lineTo(-4, 4);
+          ctx.lineTo(6, 10);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = COLORS.navy;
+        ctx.font = '900 9px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(isWax ? 'WAX' : 'ICE', 0, 34);
+        ctx.restore();
+      }
+
+      function drawEntities(time) {
+        const sorted = [...entities].sort((a, b) => a.distance - b.distance);
+        for (const entity of sorted) {
+          const y = PLAYER_Y + entity.distance - scrollDistance;
+          if (y < -120 || y > HEIGHT + 120) continue;
+          if (entity.kind === 'tree') drawTree(entity, y);
+          else if (entity.kind === 'rock') drawRock(entity, y);
+          else if (entity.kind === 'gate') drawGate(entity, y);
+          else drawPickup(entity, y, time);
+        }
+      }
+
+      function drawPlayer(time) {
+        if (invulnerableTimer > 0 && Math.floor(invulnerableTimer * 11) % 2 === 0) return;
+
+        const lean = player.lean;
+        const waxed = waxTimer > 0;
+        const icy = iceTimer > 0;
+        ctx.save();
+        ctx.translate(player.x, PLAYER_Y);
+        ctx.rotate(lean * .22);
+
+        ctx.fillStyle = 'rgba(8, 44, 58, .14)';
+        ctx.beginPath();
+        ctx.ellipse(3, 23, 21, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = icy ? '#64bfc9' : waxed ? COLORS.brass : COLORS.navy;
+        ctx.lineWidth = waxed ? 4 : 3;
+        ctx.lineCap = 'square';
+        ctx.beginPath();
+        ctx.moveTo(-8, -2);
+        ctx.lineTo(-11 - lean * 4, 28);
+        ctx.moveTo(8, -2);
+        ctx.lineTo(11 - lean * 4, 28);
+        ctx.stroke();
+
+        ctx.strokeStyle = COLORS.slateDark;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-8, 1);
+        ctx.lineTo(-13, 14);
+        ctx.moveTo(8, 1);
+        ctx.lineTo(13, 14);
+        ctx.stroke();
+
+        ctx.fillStyle = COLORS.navy;
+        ctx.fillRect(-9, -3, 7, 17);
+        ctx.fillRect(2, -3, 7, 17);
+
+        ctx.fillStyle = COLORS.brass;
+        ctx.strokeStyle = COLORS.navyDeep;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-11, -22);
+        ctx.lineTo(9, -22);
+        ctx.lineTo(12, 1);
+        ctx.lineTo(-10, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f1c5a2';
+        ctx.beginPath();
+        ctx.arc(0, -29, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = COLORS.sunset;
+        ctx.fillRect(-9, -37, 18, 6);
+        ctx.fillRect(3, -34, 10 + Math.abs(lean) * 5, 3);
+
+        ctx.strokeStyle = COLORS.navy;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-8, -15);
+        ctx.lineTo(-18 - lean * 5, 4);
+        ctx.moveTo(8, -15);
+        ctx.lineTo(18 - lean * 5, 4);
+        ctx.stroke();
+
+        if (waxed && !reducedMotion) {
+          ctx.fillStyle = '#fff1a6';
+          for (let index = 0; index < 4; index += 1) {
+            const angle = time * .004 + index * Math.PI / 2;
+            ctx.fillRect(Math.cos(angle) * 23 - 1, Math.sin(angle) * 19 - 1, 3, 3);
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        ctx.save();
+        for (const particle of particles) {
+          ctx.globalAlpha = clamp(particle.life * 1.8, 0, 1);
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(Math.round(particle.x), Math.round(particle.y), Math.round(particle.size), Math.round(particle.size));
+        }
+        ctx.restore();
+      }
+
+      function draw(time) {
+        drawSnowfield(time);
+        drawCourse();
+        drawTracks();
+        drawEntities(time);
+        drawPlayer(time);
+        drawParticles();
+
+        if (mode === 'ready') {
+          ctx.save();
+          ctx.globalAlpha = .45;
+          for (let index = 0; index < 5; index += 1) {
+            drawTree({ x: 85 + index * 157, scale: .82 + (index % 2) * .12, variant: index % 2 }, 420 + (index % 3) * 58);
+          }
+          ctx.restore();
+        }
+      }
+
+      function updateHud() {
+        const liveBest = Math.max(bestScore, Math.floor(score));
+        const wave = currentWave();
+        const pace = paceMultiplier();
+        const peakLabel = atMaximumCoursePace() ? ' MAX' : '';
+        scoreEl.textContent = formatScore(score);
+        highScoreEl.textContent = formatScore(liveBest);
+        waveEl.textContent = `WAVE ${String(wave).padStart(2, '0')}${peakLabel} · SPD ×${pace.toFixed(2)}`;
+        livesEl.textContent = Array.from({ length: 3 }, (_, index) => index < lives ? '◆' : '◇').join(' ');
+        distanceEl.textContent = `Distance ${Math.floor(scrollDistance / 8)} m`;
+
+        if (endingTimer > 0) statusEl.textContent = 'Run ending';
+        else if (invulnerableTimer > 0) statusEl.textContent = 'Recovering';
+        else if (iceTimer > 0) statusEl.textContent = `Thin ice ${iceTimer.toFixed(1)}s`;
+        else if (iceRecoveryTimer > 0) statusEl.textContent = `Ice safe ${iceRecoveryTimer.toFixed(1)}s`;
+        else if (waxTimer > 0) statusEl.textContent = `Waxed ×2 ${waxTimer.toFixed(1)}s`;
+        else statusEl.textContent = 'Clear run';
+
+        if (iceTimer > 0) {
+          effectChip.hidden = false;
+          effectChip.className = 'effect-chip ice';
+          effectChip.textContent = `Thin ice · steering locked · max pace · ${iceTimer.toFixed(1)} s`;
+        } else if (waxTimer > 0) {
+          effectChip.hidden = false;
+          effectChip.className = 'effect-chip';
+          effectChip.textContent = `Waxed skis · score ×2 · ${waxTimer.toFixed(1)} s`;
+        } else {
+          effectChip.hidden = true;
+        }
+      }
+
+      function finishGame() {
+        mode = 'over';
+        clearInput();
+        const finalScore = Math.floor(score);
+        const isNewBest = finalScore > bestScore;
+        if (isNewBest) {
+          bestScore = finalScore;
+          saveBestScore(bestScore);
+        }
+
+        document.getElementById('game-over-stamp').textContent = isNewBest ? 'New high score' : 'Run complete';
+        document.getElementById('game-over-title').innerHTML = isNewBest ? 'Fresh tracks.<br />New record.' : 'Mountain: 1.<br />Skier: 0.';
+        document.getElementById('final-score').textContent = finalScore.toLocaleString();
+        document.getElementById('final-best').textContent = bestScore.toLocaleString();
+        document.getElementById('final-gates').textContent = String(gatesCleared);
+        document.getElementById('final-distance').textContent = `${Math.floor(scrollDistance / 8).toLocaleString()} m`;
+        document.getElementById('final-speed').textContent = `${Math.round(topSpeed * .18)} km/h`;
+        document.getElementById('final-wave').textContent = String(currentWave()).padStart(2, '0');
+        startBestEl.textContent = formatScore(bestScore);
+        gameOverScreen.hidden = false;
+        pauseButton.disabled = true;
+        setGameplayControlsActive(false);
+        effectChip.hidden = true;
+        padMenuArmed = false;
+        canRestartAt = performance.now() + 350;
+        focusMenuButton(restartButton, activeGamepadIndex !== null);
+      }
+
+      function pauseGame() {
+        if (mode !== 'running' || endingTimer > 0) return;
+        mode = 'paused';
+        clearInput();
+        pauseScreen.hidden = false;
+        pauseButton.disabled = true;
+        pauseButton.textContent = 'Resume';
+        setGameplayControlsActive(false);
+        accumulator = 0;
+        padMenuArmed = false;
+        resumeButton.focus({ preventScroll: true });
+        announce('Game paused.');
+      }
+
+      function resumeGame() {
+        if (mode !== 'paused') return;
+        mode = 'running';
+        pauseScreen.hidden = true;
+        pauseButton.disabled = false;
+        pauseButton.textContent = 'Pause';
+        setGameplayControlsActive(true);
+        padGameplayArmed = false;
+        clearGamepadOutput();
+        clearControllerSelection();
+        lastTime = performance.now();
+        accumulator = 0;
+        frame.focus({ preventScroll: true });
+        announce('Run resumed.');
+      }
+
+      function togglePause() {
+        if (mode === 'running') pauseGame();
+        else if (mode === 'paused') resumeGame();
+      }
+
+      function gameLoop(time) {
+        const frameDelta = Math.min(.05, Math.max(0, (time - lastTime) / 1000));
+        lastTime = time;
+        pollGamepad(time);
+
+        if (mode === 'running') {
+          accumulator += frameDelta;
+          let steps = 0;
+          while (accumulator >= FIXED_STEP && steps < 8) {
+            update(FIXED_STEP);
+            accumulator -= FIXED_STEP;
+            steps += 1;
+          }
+          if (steps === 8) accumulator = 0;
+          updateHud();
+        }
+
+        draw(time);
+        animationFrame = requestAnimationFrame(gameLoop);
+      }
+
+      const keyActions = {
+        ArrowLeft: 'left',
+        KeyA: 'left',
+        ArrowRight: 'right',
+        KeyD: 'right',
+        ArrowUp: 'boost',
+        KeyW: 'boost',
+        ArrowDown: 'brake',
+        KeyS: 'brake'
+      };
+
+      const menuKeyDirections = {
+        ArrowUp: -1,
+        KeyW: -1,
+        ArrowLeft: -1,
+        KeyA: -1,
+        ArrowDown: 1,
+        KeyS: 1,
+        ArrowRight: 1,
+        KeyD: 1
+      };
+
+      window.addEventListener('keydown', (event) => {
+        clearControllerSelection();
+        const action = keyActions[event.code];
+        if (action && mode === 'running') {
+          event.preventDefault();
+          held.add(action);
+          return;
+        }
+
+        const menuDirection = menuKeyDirections[event.code];
+        if (menuDirection && (mode === 'ready' || mode === 'paused' || mode === 'over')) {
+          event.preventDefault();
+          moveMenuFocus(menuDirection, false);
+          return;
+        }
+
+        if ((event.code === 'KeyP' || event.code === 'Escape') && (mode === 'running' || mode === 'paused')) {
+          event.preventDefault();
+          if (!event.repeat) togglePause();
+          return;
+        }
+
+        if (event.code === 'Escape' && mode === 'over') {
+          event.preventDefault();
+          if (!event.repeat) returnToTitle();
+          return;
+        }
+
+        if ((event.code === 'Enter' || event.code === 'Space') && (mode === 'ready' || mode === 'paused' || mode === 'over')) {
+          const buttons = menuButtonsForMode();
+          if (!buttons.includes(document.activeElement)) {
+            event.preventDefault();
+            if (!event.repeat) activateFocusedMenuButton(performance.now(), false);
+          }
+        }
+      }, { passive: false });
+
+      window.addEventListener('keyup', (event) => {
+        const action = keyActions[event.code];
+        if (action) held.delete(action);
+      });
+
+      document.querySelectorAll('[data-hold]').forEach((button) => {
+        const action = button.dataset.hold;
+        let ignoreClickUntil = 0;
+        let assistReleaseTimer = 0;
+
+        const engage = (focusGame = false) => {
+          if (mode !== 'running') return;
+          held.add(action);
+          button.classList.add('active');
+          if (focusGame) frame.focus({ preventScroll: true });
+        };
+
+        const disengage = () => {
+          held.delete(action);
+          button.classList.remove('active');
+        };
+
+        const press = (event) => {
+          event.preventDefault();
+          if (mode !== 'running') return;
+          ignoreClickUntil = performance.now() + 500;
+          try { button.setPointerCapture(event.pointerId); } catch (_) { /* Pointer capture is optional. */ }
+          engage(true);
+        };
+
+        const release = (event) => {
+          if (event) event.preventDefault();
+          disengage();
+        };
+
+        button.addEventListener('pointerdown', press);
+        button.addEventListener('pointerup', release);
+        button.addEventListener('pointercancel', release);
+        button.addEventListener('lostpointercapture', release);
+        button.addEventListener('keydown', (event) => {
+          if (event.code !== 'Space' && event.code !== 'Enter') return;
+          event.preventDefault();
+          ignoreClickUntil = performance.now() + 500;
+          if (!event.repeat) engage();
+        });
+        button.addEventListener('keyup', (event) => {
+          if (event.code !== 'Space' && event.code !== 'Enter') return;
+          event.preventDefault();
+          disengage();
+        });
+        button.addEventListener('click', () => {
+          // Assistive technologies commonly expose a semantic click rather
+          // than a press/release pair. Give that activation a short pulse.
+          if (mode !== 'running' || performance.now() < ignoreClickUntil) return;
+          engage();
+          window.clearTimeout(assistReleaseTimer);
+          assistReleaseTimer = window.setTimeout(disengage, 220);
+        });
+        button.addEventListener('contextmenu', (event) => event.preventDefault());
+      });
+
+      startButton.addEventListener('click', resetGame);
+      restartButton.addEventListener('click', resetGame);
+      restartPauseButton.addEventListener('click', resetGame);
+      exitPauseButton.addEventListener('click', returnToTitle);
+      exitOverButton.addEventListener('click', returnToTitle);
+      resumeButton.addEventListener('click', resumeGame);
+      pauseButton.addEventListener('click', togglePause);
+      frame.addEventListener('pointerdown', () => frame.focus({ preventScroll: true }));
+      document.addEventListener('pointerdown', clearControllerSelection, true);
+
+      window.addEventListener('gamepadconnected', (event) => {
+        if (activeGamepadIndex === null || activeGamepadIndex === event.gamepad.index) registerGamepad(event.gamepad);
+      });
+
+      window.addEventListener('gamepaddisconnected', (event) => {
+        if (activeGamepadIndex === event.gamepad.index) unregisterGamepad();
+      });
+
+      window.addEventListener('blur', () => {
+        pageHasFocus = false;
+        clearInput();
+        if (mode === 'running' && endingTimer === 0) pauseGame();
+      });
+
+      window.addEventListener('focus', () => {
+        pageHasFocus = true;
+        padMenuArmed = false;
+        padGameplayArmed = false;
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          pageHasFocus = false;
+          clearInput();
+          if (mode === 'running' && endingTimer === 0) pauseGame();
+        } else {
+          pageHasFocus = document.hasFocus();
+          padMenuArmed = false;
+          padGameplayArmed = false;
+        }
+      });
+
+      window.addEventListener('resize', setupCanvas);
+      window.addEventListener('beforeunload', () => cancelAnimationFrame(animationFrame));
+
+      setupCanvas();
+      setGameplayControlsActive(false);
+      startBestEl.textContent = formatScore(bestScore);
+      highScoreEl.textContent = formatScore(bestScore);
+      draw(performance.now());
+      startButton.focus({ preventScroll: true });
+      animationFrame = requestAnimationFrame(gameLoop);
+    })();
+  </script>
+</body>
+</html>

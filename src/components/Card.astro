@@ -12,7 +12,7 @@ const imageClasses = ['card-image', item.imageFit === 'contain' ? 'image-contain
 ---
 
 <a class={classes} style={`--accent: var(--${item.accent})`} href={`/${item.theme === 'play' ? 'games' : item.eyebrow.toLowerCase().startsWith('music') || item.eyebrow.toLowerCase().startsWith('project') ? 'projects' : 'apps'}/${item.slug}/`}>
-  {item.image && <img class={imageClasses} src={item.image} alt="" loading="lazy" />}
+  {item.image && <img class={imageClasses} src={item.image} alt={item.imageAlt ?? ''} loading="lazy" />}
   <div>
     <div class="eyebrow">{item.eyebrow}</div>
     <h3 class="card-title">{item.title}</h3>
