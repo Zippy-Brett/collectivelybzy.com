@@ -8,4 +8,6 @@ This release prepares eight schemas and 17 draft stories, including nine apps. S
 
 Use space-scoped delivery tokens for website builds. The owner-only import utility uses a locally supplied management token and never publishes stories. No management token belongs in the website environment.
 
-The existing Sanity integration remains available when Storyblok is unconfigured. Once the production delivery token is configured, published Storyblok collections control public visibility. See the release guide before switching sources.
+The existing Sanity integration remains available when Storyblok is unconfigured. Once the production delivery token is configured and `STORYBLOK_CONTENT_ENABLED=true`, published Storyblok collections control public visibility. See the release guide before switching sources.
+
+CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.

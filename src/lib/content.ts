@@ -12,6 +12,7 @@ import { apps as localApps } from '../data/content';
  * tested. No write-capable CMS client belongs in this public site.
  */
 export async function getApps() {
+  if (!storyblokConfigured) return localApps;
   const storyblok = await getStoryblokAppCollection();
   // Once connected, published Storyblok stories are authoritative. Unpublished
   // or hidden records must never reappear through a local fallback.

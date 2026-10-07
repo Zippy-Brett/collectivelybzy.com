@@ -25,3 +25,5 @@ The seeded assets reference existing public website files. They render on the we
 ## Recommended access
 
 Give routine editors content and asset editing. Keep schema changes, integrations, tokens, public publishing, and deployments with the owner. If the current Storyblok plan does not support custom publishing roles, use owner review before publication rather than granting everyone administrator access.
+
+CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.

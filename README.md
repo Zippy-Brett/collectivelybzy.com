@@ -23,3 +23,5 @@ Static output is `dist`. Cloudflare can deploy this directory. No delivery token
 The Storyblok package includes eight schemas and 17 draft stories. Run `node scripts/import-cms.mjs` for its offline plan. Importing into the account, reviewing existing records, configuring the delivery token and deploy hook, and testing newsletter delivery remain account-side tasks. Existing Sanity content can still serve as the legacy source when Storyblok is not configured.
 
 The Godot source under `godot/blue_velocity/` is independent of the public Astro build. Approved browser games are retained in their isolated play areas.
+
+CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.

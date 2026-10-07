@@ -42,14 +42,16 @@ const requestedVersion = env.STORYBLOK_VERSION;
 const version: StoryblokVersion = requestedVersion === 'draft' ? 'draft' : 'published';
 
 export const storyblokSpaceId = spaceId;
-const token = version === 'draft' ? env.STORYBLOK_PREVIEW_TOKEN : env.STORYBLOK_PUBLIC_TOKEN;
-if (version === 'draft' && env.STORYBLOK_PREVIEW_BUILD !== 'true') {
+// Activate only after the complete migration is reviewed and published.
+const enabled = env.STORYBLOK_CONTENT_ENABLED === 'true';
+const token = enabled ? (version === 'draft' ? env.STORYBLOK_PREVIEW_TOKEN : env.STORYBLOK_PUBLIC_TOKEN) : undefined;
+if (enabled && version === 'draft' && env.STORYBLOK_PREVIEW_BUILD !== 'true') {
   throw new Error('Draft content requires STORYBLOK_PREVIEW_BUILD=true and SITE_INDEXABLE=false.');
 }
-if (version === 'draft' && env.SITE_INDEXABLE !== 'false') {
+if (enabled && version === 'draft' && env.SITE_INDEXABLE !== 'false') {
   throw new Error('Draft builds must use SITE_INDEXABLE=false.');
 }
-if ((env.STORYBLOK_PUBLIC_TOKEN || env.STORYBLOK_PREVIEW_TOKEN) && !token) {
+if (enabled && (env.STORYBLOK_PUBLIC_TOKEN || env.STORYBLOK_PREVIEW_TOKEN) && !token) {
   throw new Error('The delivery token for the selected Storyblok version is missing.');
 }
 export const storyblokConfigured = Boolean(token);

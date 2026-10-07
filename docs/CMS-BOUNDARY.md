@@ -19,4 +19,6 @@ This public site is intentionally separate from Scroll in Peace and its private 
 - New game packages, origins, themes, and scripts require owner approval.
 - No arbitrary HTML, CSS, JavaScript, or public write endpoints are part of the public site.
 
-The current content in `src/data/content.ts` is the local catalog used when Storyblok is unconfigured. Once connected, Storyblok is authoritative for app, game, project, and store collections. Configured API failures stop the build. Temporary app-only merge mode is documented in RELEASE.md and must be removed after migration. Existing approved game package paths and music embed origins remain in source code.
+The current content in `src/data/content.ts` is the local catalog used when Storyblok is unconfigured. Once activated, Storyblok is authoritative for app, game, project, and store collections. Configured API failures stop the build. Temporary app-only merge mode is documented in RELEASE.md and must be removed after migration. Existing approved game package paths and music embed origins remain in source code.
+
+CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.
