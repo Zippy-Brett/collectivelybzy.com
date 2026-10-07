@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@sanity/client": "^8.7.0",
-    "astro": "^5.0.0",
+    "astro": "^7.3.6",
     "gsap": "^3.15.0"
   },
   "devDependencies": {

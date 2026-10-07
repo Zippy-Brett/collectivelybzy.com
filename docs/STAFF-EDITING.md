@@ -1,6 +1,6 @@
 # Editing Collectively Bzy
 
-Space: `295535334209633`. The prepared CMS package has 17 draft stories: the studio homepage, nine app pages, five games, and two projects. Store notes can be added separately. It has not yet been imported into the account.
+Space: `295535334209633`. The space contains 17 published stories: the studio homepage, nine app pages, five games, and two projects. Store notes can be added separately.
 
 ## Everyday app updates
 
@@ -26,4 +26,4 @@ The seeded assets reference existing public website files. They render on the we
 
 Give routine editors content and asset editing. Keep schema changes, integrations, tokens, public publishing, and deployments with the owner. If the current Storyblok plan does not support custom publishing roles, use owner review before publication rather than granting everyone administrator access.
 
-CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.
+Production uses published Storyblok content with `STORYBLOK_CONTENT_ENABLED=true`. Local builds without a delivery token retain the nine-app catalog. Staff publication reaches the public site after the connected Cloudflare production build succeeds; drafts remain unpublished.

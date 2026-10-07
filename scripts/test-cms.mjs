@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { writeFile,readFile } from 'node:fs/promises';
 const base=new URL('../',import.meta.url).pathname;
 let number=0;
-async function load(env={}){ const output=`${base}node_modules/.cache/collectively-module-${number++}.mjs`;await build({entryPoints:[base+'src/lib/content.ts'],outfile:output,bundle:true,packages:'external',platform:'node',format:'esm',define:{'import.meta.env':JSON.stringify({STORYBLOK_CONTENT_ENABLED:'true',...env})},logLevel:'silent'});return import(output); }
+async function load(env={}){ const output=`${base}node_modules/.cache/collectively-module-${number++}.mjs`;await build({entryPoints:[base+'src/lib/content.ts'],outfile:output,bundle:true,packages:'external',platform:'node',format:'esm',define:{'import.meta.env':JSON.stringify({STORYBLOK_CONTENT_ENABLED:'true',...env}),'process.env':'{}'},logLevel:'silent'});return import(output); }
 const story=(slug,visible=true)=>({slug,name:slug,content:{display_on_site:visible,status:'in-development',short_description:'Example',body:[{component:'rich_text',body:{type:'doc',content:[{type:'bullet_list',content:[{type:'list_item',content:[{type:'paragraph',content:[{type:'text',text:'A real benefit'}]}]}]}]}}]}});
 let module=await load();assert.equal((await module.getApps()).length,9);
 module=await load({STORYBLOK_PUBLIC_TOKEN:'test',STORYBLOK_CONTENT_ENABLED:'false'});assert.equal((await module.getApps()).length,9);
