@@ -24,4 +24,4 @@ The Storyblok package includes eight schemas and 17 draft stories. Run `node scr
 
 The Godot source under `godot/blue_velocity/` is independent of the public Astro build. Approved browser games are retained in their isolated play areas.
 
-CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.
+Production uses published Storyblok content with `STORYBLOK_CONTENT_ENABLED=true`. Local builds without a delivery token retain the nine-app catalog. Staff publication reaches the public site after the connected Cloudflare production build succeeds; drafts remain unpublished.

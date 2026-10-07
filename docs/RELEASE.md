@@ -19,7 +19,7 @@ The generated sitemap includes public site pages and excludes the old splash dem
 3. Review all stories in Storyblok, correct existing stale release statuses, replace seeded local asset references through the asset picker if desired, and verify the five official App Store links. Set Available for Sensory Seek.
 4. Publish the complete intended collections before enabling the production public delivery token. With a token configured and `STORYBLOK_CONTENT_ENABLED=true`, Storyblok is authoritative for apps, games, projects, and store notes. An empty collection stays empty rather than resurrecting local content. During a short app migration only, `STORYBLOK_MIGRATION_MODE=merge` overlays CMS apps on local records; remove it after migration. Hidden CMS entries still stay hidden in merge mode, but unpublished CMS entries may use local content until this temporary mode is removed.
 5. Configure the production delivery token and published version in Cloudflare. Test a preview build, then deploy the reviewed production build.
-6. Add Storyblok publish/unpublish webhooks to a Cloudflare Pages deploy hook so staff publication starts a new build. Keep that hook in account settings. Hook creation and account-side testing are pending.
+6. Add Storyblok publish/unpublish webhooks to a Cloudflare Pages deploy hook so staff publication starts a new build. Keep that hook in account settings. The Cloudflare Git project is `collectivelybzy`. Confirm the publish/unpublish hook and successful production deployment before moving the custom domain.
 
 Without delivery tokens the build uses the complete local catalog. Once activated, failed Storyblok requests stop the build to preserve the last deployed site; they do not publish stale fallback pages. The website never uses a management token.
 
@@ -33,4 +33,4 @@ Run `npm run check`. Browser checks cover desktop, phone navigation, all nine ap
 
 Approved game assets and private Scroll in Peace infrastructure retain the boundaries documented in CMS-BOUNDARY.md. Marketing content and public App Store links are the only app details changed here.
 
-CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.
+Production uses published Storyblok content with `STORYBLOK_CONTENT_ENABLED=true`. Local builds without a delivery token retain the nine-app catalog. Staff publication reaches the public site after the connected Cloudflare production build succeeds; drafts remain unpublished.

@@ -21,4 +21,4 @@ This public site is intentionally separate from Scroll in Peace and its private 
 
 The current content in `src/data/content.ts` is the local catalog used when Storyblok is unconfigured. Once activated, Storyblok is authoritative for app, game, project, and store collections. Configured API failures stop the build. Temporary app-only merge mode is documented in RELEASE.md and must be removed after migration. Existing approved game package paths and music embed origins remain in source code.
 
-CMS activation: keep `STORYBLOK_CONTENT_ENABLED=false` (the default) for the complete local nine-app launch. After reviewing and publishing the migrated collections, configure the appropriate delivery token and set `STORYBLOK_CONTENT_ENABLED=true` in Cloudflare. Existing tokens alone do not activate the new adapter. Publishing in the CMS updates the site only after activation and a successful build.
+Production uses published Storyblok content with `STORYBLOK_CONTENT_ENABLED=true`. Local builds without a delivery token retain the nine-app catalog. Staff publication reaches the public site after the connected Cloudflare production build succeeds; drafts remain unpublished.
