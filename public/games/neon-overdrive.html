@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090b16">
+<meta name="description" content="Neon Overdrive: a four-lane, endless arcade highway runner by Collectively Bzy. Dodge traffic, grab gold, and ride the neon.">
+<title>Neon Overdrive — Collectively Bzy</title>
+<style>
+  :root { color-scheme: dark; --ink:#090b16; --panel:#101223; --muted:#9396ad; --cyan:#63f8ec; --pink:#ff559c; --gold:#ffe08a; }
+  * { box-sizing:border-box; }
+  html { min-height:100%; background:var(--ink); }
+  body { margin:0; min-height:100vh; min-height:100svh; padding:32px 24px max(24px, env(safe-area-inset-bottom)); color:#f3f3fa; font-family:ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; background:radial-gradient(ellipse at 50% 25%,#24142f 0,transparent 60%),#090b16; }
+  button { font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  button:focus-visible { outline:2px solid var(--gold); outline-offset:4px; }
+  .arcade { max-width:800px; margin:auto; }
+  .masthead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:25px; color:var(--muted); font-size:10px; letter-spacing:2px; }
+  .brand { color:#f2f1f8; font-weight:800; letter-spacing:1px; }
+  .brand b { color:var(--cyan); }
+  .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 10px #63f8ec70; margin-right:9px; }
+  .heading { display:flex; justify-content:space-between; align-items:end; gap:15px; margin-bottom:16px; }
+  .eyebrow { margin:0 0 9px; color:var(--pink); font-size:9px; letter-spacing:3px; }
+  h1 { margin:0; font-size:clamp(22px,5vw,37px); font-style:italic; font-weight:900; letter-spacing:-2px; line-height:1; }
+  h1 span { color:var(--cyan); }
+  .tools { display:flex; gap:6px; flex-shrink:0; }
+  .tool { border:1px solid #333449; padding:9px 10px; background:#111120; color:#c1c2d4; font-size:9px; letter-spacing:1px; min-height:36px; white-space:nowrap; }
+  .tool:hover { border-color:var(--cyan); color:var(--cyan); }
+  .stage { position:relative; width:100%; aspect-ratio:4 / 3; isolation:isolate; overflow:hidden; border:1px solid #454259; border-radius:3px; background:#090a16; box-shadow:0 0 0 5px #12131f,0 20px 80px #0009; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  .stage:after { content:""; position:absolute; inset:0; pointer-events:none; z-index:5; opacity:.1; background:repeating-linear-gradient(transparent 0 3px,#000 3px 4px); }
+  .hud { position:absolute; inset:0 0 auto; display:grid; grid-template-columns:1.35fr 1.2fr 1fr 1fr; gap:8px; padding:17px 23px 20px; z-index:2; background:linear-gradient(#080b17f5,#080b17df 75%,transparent); pointer-events:none; }
+  .hud-label { display:block; color:#9296af; font-size:9px; letter-spacing:2px; margin-bottom:7px; }
+  .hud-value { font-size:22px; line-height:1; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:1px; }
+  #score { color:var(--cyan); }
+  #best { color:var(--gold); }
+  #lives { color:var(--pink); letter-spacing:4px; }
+  .hud > :last-child { text-align:right; }
+  .overlay { position:absolute; inset:0; z-index:3; display:flex; justify-content:center; align-items:center; padding:80px 20px 20px; background:#07091482; }
+  [hidden] { display:none !important; }
+  .screen { width:min(470px,100%); text-align:center; }
+  .screen-kicker { font-size:10px; letter-spacing:4px; color:var(--gold); margin:0 0 19px; }
+  .screen-title { font-size:clamp(33px,7.2vw,64px); line-height:.94; font-weight:900; font-style:italic; letter-spacing:-3px; margin:0 0 19px; text-shadow:3px 3px 0 #5c1d54; }
+  .screen-title span { display:block; color:var(--cyan); text-shadow:3px 3px 0 #164453,0 0 30px #63f8ec35; }
+  .screen-copy { font-size:11px; color:#c3c4d6; line-height:1.9; margin:0 0 23px; }
+  .play-button { position:relative; min-height:51px; border:1px solid var(--pink); background:#ff559c; color:#160d22; padding:15px 32px; font-size:13px; font-weight:900; letter-spacing:2px; box-shadow:4px 4px 0 #541d41,0 0 30px #ff559c20; }
+  .play-button:hover { background:#ff88b9; transform:translateY(-1px); }
+  .coin-text { animation:coin-flash 1.6s steps(2,end) infinite; }
+  @keyframes coin-flash { 0%,100% { opacity:1; } 50% { opacity:.48; } }
+  .start-legend { display:flex; justify-content:center; gap:22px; margin:24px 0 0; color:#9ea0b9; font-size:9px; }
+  .start-legend b { display:block; color:var(--gold); font-size:14px; margin-bottom:7px; }
+  .start-legend > :nth-child(2) b { color:var(--cyan); }
+  .start-legend > :nth-child(3) b { color:var(--pink); }
+  .enter-hint { color:#797d99; font-size:9px; letter-spacing:2px; margin:22px 0 0; }
+  .results { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 23px; border-block:1px solid #5b4767; padding:17px 0; }
+  .results span { display:block; color:#9ea0b9; font-size:9px; letter-spacing:2px; margin-bottom:9px; }
+  .results strong { color:var(--cyan); font-size:26px; }
+  #record-note { color:var(--gold); }
+  .readout { position:absolute; bottom:15px; inset-inline:20px; z-index:2; display:flex; justify-content:space-between; color:#b1b5cb; font-size:9px; letter-spacing:1px; pointer-events:none; }
+  #status { color:var(--cyan); font-weight:800; }
+  .controls { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px 0 17px; }
+  .control-group { display:flex; gap:7px; }
+  .drive-button { display:flex; flex-direction:column; align-items:center; justify-content:center; width:71px; height:52px; border:1px solid #39394d; border-bottom-width:3px; background:#151524; color:#e1e2f1; font-size:18px; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .drive-button small { font-size:8px; color:#9195ad; letter-spacing:1px; margin-top:5px; }
+  .drive-button[data-input="up"] { border-color:#285b58; color:var(--cyan); }
+  .drive-button[data-input="down"] { border-color:#6b384b; color:var(--pink); }
+  .drive-button.is-held { background:#2b3140; border-color:var(--cyan); transform:translateY(1px); }
+  .keyboard-hint { font-size:9px; text-align:center; line-height:1.9; color:#9296ad; }
+  .keyboard-hint strong { font-weight:500; color:#d6d8e8; }
+  .controller-guide { border-top:1px solid #29283c; padding:15px 0; }
+  .controller-info { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:13px; font-size:9px; line-height:1.8; color:#9296ad; }
+  .controller-title { margin:0; color:#d6d8e8; font-size:9px; font-weight:500; letter-spacing:2px; }
+  .controller-bindings { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin:0; }
+  .controller-bindings dt { color:#9296ad; font-size:8px; letter-spacing:1px; margin-bottom:5px; }
+  .controller-bindings dd { margin:0; color:var(--cyan); font-size:10px; font-weight:700; line-height:1.6; }
+  #controller-status { flex-shrink:0; letter-spacing:1px; color:#b0a1b8; }
+  #controller-status[data-state="connected"] { color:var(--cyan); }
+  #controller-status[data-state="blocked"], #controller-status[data-state="unmapped"] { color:var(--gold); }
+  #controller-help { margin:12px 0 0; color:#9296ad; font-size:9px; line-height:1.8; }
+  .on-road-controls { position:absolute; z-index:4; top:23%; left:2%; width:16%; padding:12px 9px; background:#0b0f1ced; border:1px solid #39394d; pointer-events:none; }
+  .on-road-controls h3 { margin:0 0 16px; color:#d6d8e8; font-size:8px; font-weight:500; letter-spacing:1.5px; }
+  .on-road-controls p { margin:0 0 13px; color:#9296ad; font-size:8px; line-height:1.5; }
+  .on-road-controls p:last-child { margin-bottom:0; }
+  .on-road-controls b { display:block; margin-top:3px; color:var(--cyan); font-size:9px; font-weight:700; }
+  .footer { display:flex; justify-content:space-between; gap:16px; border-top:1px solid #29283c; padding-top:15px; font-size:9px; line-height:1.8; color:#757992; }
+  .footer span:last-child { color:#b0a1b8; }
+  .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; border:0; }
+  @media (max-width:580px) {
+    body { padding:20px 12px max(18px,env(safe-area-inset-bottom)); }
+    .masthead { font-size:8px; letter-spacing:1px; margin-bottom:21px; }
+    .heading { align-items:center; }
+    .on-road-controls { display:none; }
+    .eyebrow { font-size:8px; letter-spacing:2px; }
+    .tool { font-size:8px; padding:8px 6px; letter-spacing:0; }
+    .hud { padding:11px 12px 15px; gap:4px; }
+    .hud-label { font-size:7px; letter-spacing:1px; margin-bottom:5px; }
+    .hud-value { font-size:16px; }
+    #lives { letter-spacing:1px; }
+    .overlay { padding:52px 12px 12px; }
+    .screen-kicker { font-size:8px; margin-bottom:11px; letter-spacing:2px; }
+    .screen-title { font-size:clamp(30px,8vw,45px); margin-bottom:10px; letter-spacing:-2px; }
+    .screen-copy { font-size:9px; line-height:1.6; margin-bottom:13px; }
+    .play-button { min-height:40px; font-size:10px; padding:10px 20px; letter-spacing:1px; }
+    .start-legend { margin-top:15px; gap:18px; font-size:7px; }
+    .start-legend b { font-size:11px; margin-bottom:4px; }
+    .enter-hint { display:none; }
+    .readout { bottom:9px; inset-inline:12px; font-size:7px; }
+    .controls { padding-top:16px; gap:8px; }
+    .drive-button { width:55px; height:52px; }
+    .keyboard-hint { font-size:8px; }
+    .controller-info { gap:8px; font-size:7px; margin-bottom:12px; }
+    .controller-title { font-size:8px; letter-spacing:1px; }
+    .controller-bindings { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 8px; }
+    .controller-bindings dt { font-size:7px; }
+    .controller-bindings dd { font-size:9px; }
+    #controller-help { font-size:8px; }
+    .footer { font-size:8px; }
+    .results { padding:10px 0; margin-bottom:14px; }
+    .results strong { font-size:22px; }
+  }
+  @media (max-width:420px) {
+    .screen-kicker, .start-legend { display:none; }
+    .overlay { padding-bottom:22px; }
+    .heading > :first-child { min-width:0; }
+    .results { padding:8px 0; margin-bottom:10px; }
+    .results span { font-size:8px; margin-bottom:6px; }
+    .results strong { font-size:19px; }
+    #over-screen { padding:64px 12px 26px; }
+    #over-screen .screen-title, #pause-screen .screen-title { font-size:27px; }
+    #over-screen .screen-title span, #pause-screen .screen-title span { display:inline; }
+    #over-screen .screen-title span:before, #pause-screen .screen-title span:before { content:" "; }
+    #over-screen .screen-title { margin-bottom:6px; }
+    #over-screen .results { padding:4px 0; margin-bottom:6px; }
+    #over-screen .results span { margin-bottom:3px; }
+    #over-screen .results strong { display:block; font-size:17px; line-height:1; }
+    #over-screen .screen-copy { margin-bottom:8px; }
+  }
+  @media (max-width:370px) { .keyboard-hint { display:none; } .masthead > :last-child { font-size:7px; } h1 { font-size:21px; } .tool { padding:7px 5px; } }
+  @media (prefers-reduced-motion:reduce) { .coin-text { animation:none; } .stage:after { display:none; } }
+</style>
+</head>
+<body>
+<main class="arcade">
+  <header class="masthead"><div class="brand">COLLECTIVELY <b>BZY</b> / PLAY</div><div><i class="live-dot" aria-hidden="true"></i>THE ARCADE COLLECTION · 01</div></header>
+  <div class="heading"><div><p class="eyebrow">ENDLESS HIGHWAY / FOUR-LANE SURVIVAL</p><h1>NEON <span>OVERDRIVE</span></h1></div><div class="tools"><button class="tool" id="sound-button" aria-pressed="false" aria-label="Enable sound">SOUND OFF</button><button class="tool" id="pause-button" aria-label="Pause game" disabled>Ⅱ PAUSE</button></div></div>
+  <section class="stage" aria-label="Neon Overdrive arcade game">
+    <canvas id="game" width="800" height="600" tabindex="0" aria-label="Four-lane highway. Arrow keys or controller D-pad and left stick drive. Enter or the controller's bottom face button starts a run. Escape or Start pauses.">Your browser needs HTML5 Canvas to play Neon Overdrive.</canvas>
+    <div class="hud" aria-label="Game statistics"><div><span class="hud-label">SCORE</span><span class="hud-value" id="score">000000</span></div><div><span class="hud-label">HI-SCORE</span><span class="hud-value" id="best">000000</span></div><div><span class="hud-label">WAVE</span><span class="hud-value" id="wave">01</span></div><div><span class="hud-label">LIVES</span><span class="hud-value" id="lives" aria-label="3 lives">♥♥♥</span></div></div>
+    <div class="readout"><span id="status">READY TO ROLL</span><span id="speed-label">4 LANES · NO FINISH LINE</span></div>
+    <aside class="on-road-controls" aria-hidden="true"><h3>CONTROLLER</h3><p>STEER<b>D-PAD / STICK</b></p><p>GAS · 2×<b data-controller-binding="gas">RT / R2</b></p><p>BRAKE<b data-controller-binding="brake">LT / L2</b></p><p>PLAY / RESUME<b data-controller-binding="play">A / ✕</b></p><p>PAUSE<b data-controller-binding="pause">START / OPTIONS</b></p></aside>
+    <div class="overlay" id="start-screen"><div class="screen"><p class="screen-kicker">AFTER DARK. FULL THROTTLE.</p><h2 class="screen-title">NEON<span>OVERDRIVE</span></h2><p class="screen-copy">Four lanes. Three lives. No finish line.<br>Dodge the traffic. Chase the gold. Own the night.</p><button class="play-button" id="play-button"><span class="coin-text">INSERT COIN / PLAY</span></button><div class="start-legend"><div><b>◈ +500</b>GOLD COIN</div><div><b>ϟ 5 SEC</b>NITRO SHIELD</div><div><b>⊗ 3 SEC</b>OIL / FLAT TIRE</div></div><p class="enter-hint">PRESS ENTER TO START</p></div></div>
+    <div class="overlay" id="pause-screen" hidden><div class="screen"><p class="screen-kicker">TAKE A BREATHER</p><h2 class="screen-title">PIT <span>STOP</span></h2><p class="screen-copy">Your run is right where you left it.</p><button class="play-button" id="resume-button">BACK TO THE ROAD</button><p class="enter-hint">ENTER / ESC TO RESUME</p></div></div>
+    <div class="overlay" id="over-screen" hidden><div class="screen"><p class="screen-kicker" id="record-note">THE ROAD ALWAYS WINS. EVENTUALLY.</p><h2 class="screen-title">RUN<span>OVER</span></h2><div class="results"><div><span>FINAL SCORE</span><strong id="final-score">0</strong></div><div><span>BEST SCORE</span><strong id="final-best">0</strong></div></div><p class="screen-copy" id="run-note"></p><button class="play-button" id="restart-button">ONE MORE RUN ↗</button><p class="enter-hint">PRESS ENTER TO RESTART</p></div></div>
+  </section>
+  <nav class="controls" aria-label="Driving controls"><div class="control-group"><button class="drive-button" data-input="left" aria-label="Steer left">←<small>LEFT</small></button><button class="drive-button" data-input="right" aria-label="Steer right">→<small>RIGHT</small></button></div><div class="keyboard-hint"><strong>ARROW KEYS TO DRIVE</strong><br>ENTER TO PLAY · ESC TO PAUSE</div><div class="control-group"><button class="drive-button" data-input="down" aria-label="Hold to brake">↓<small>BRAKE</small></button><button class="drive-button" data-input="up" aria-label="Hold to accelerate for double score">↑<small>2× GAS</small></button></div></nav>
+  <section class="controller-guide" aria-label="Controller controls">
+    <div class="controller-info"><h2 class="controller-title">CONTROLLER CONTROLS</h2><span id="controller-status" role="status" aria-live="polite" data-state="waiting">◇ CONTROLLER STANDBY</span></div>
+    <dl class="controller-bindings">
+      <div><dt>STEER</dt><dd>D-PAD / LEFT STICK</dd></div>
+      <div><dt>ACCELERATE · 2×</dt><dd id="controller-gas">RT / R2</dd></div>
+      <div><dt>BRAKE</dt><dd id="controller-brake">LT / L2</dd></div>
+      <div><dt>PLAY / RESUME</dt><dd id="controller-play">A / ✕</dd></div>
+      <div><dt>PAUSE</dt><dd id="controller-pause">START / OPTIONS</dd></div>
+    </dl>
+    <p id="controller-help">Pair a controller, then press any button to connect. D-pad / stick up and down also control gas and brake.</p>
+  </section>
+  <footer class="footer"><span>WAVE UP EVERY 30s · TRAFFIC SPEED +15%<br>GRAB NITRO TO SMASH THROUGH FOR DOUBLE POINTS<br>OIL / FLAT TIRES LOCK YOUR STEERING FOR 3s</span><span>BUILT FOR THE NIGHT.<br>© COLLECTIVELY BZY</span></footer>
+  <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+  <noscript>This game requires JavaScript. Enable JavaScript to play.</noscript>
+</main>
+<script>
+(() => {
+  'use strict';
+
+  // Everything is local: canvas art, Web Audio tones, styles, and high-score storage.
+  // The logical playfield stays 800×600; CSS scales it for phones and WKWebView.
+  const W = 800, H = 600;
+  const ROAD = { left:160, right:640, laneWidth:120 };
+  const PLAYER_Y = 488, STEP = 1 / 120, BASE_SPEED = 260;
+  const COIN_POINTS = 500, WAVE_SECONDS = 30, NITRO_SECONDS = 5, SPIN_SECONDS = 3;
+  const STORAGE_KEY = 'collectivelybzy.neon-overdrive.high-score.v1';
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const ui = { score:$('score'), best:$('best'), wave:$('wave'), lives:$('lives'), status:$('status'), speed:$('speed-label'), start:$('start-screen'), pause:$('pause-screen'), over:$('over-screen'), pauseButton:$('pause-button'), sound:$('sound-button') };
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const random = (min,max) => min + Math.random() * (max - min);
+  const pick = array => array[Math.floor(Math.random() * array.length)];
+  const clamp = (value,min,max) => Math.max(min,Math.min(max,value));
+  const laneX = lane => ROAD.left + (lane + .5) * ROAD.laneWidth;
+  const format = value => Math.floor(value).toString().padStart(6,'0');
+  const isHazard = entity => ['car','barrier','oil','tire'].includes(entity.type);
+  let best = 0, storageAvailable = true;
+  try {
+    const saved = Number(localStorage.getItem(STORAGE_KEY));
+    if (Number.isFinite(saved) && saved >= 0) best = Math.floor(saved);
+  } catch (_) { storageAvailable = false; }
+
+  let state = 'start', score = 0, lives = 3, wave = 1, elapsed = 0;
+  let roadOffset = 0, sceneryOffset = 0, speed = BASE_SPEED, sceneTime = 0;
+  let nitro = 0, spin = 0, invulnerable = 0, crash = 0, shake = 0;
+  let entities = [], particles = [], floating = [], streaks = [];
+  let spawnTimer = .9, pickupTimer = 1.7, rowsRemaining = 0, escapeLane = 1;
+  let waveBanner = 0, newRecord = false, finishing = false, hudTimer = 0;
+  let lastFrame = 0, accumulator = 0, laneRepeat = 0;
+  const player = { lane:1, x:laneX(1), y:PLAYER_Y, width:46, height:82 };
+  const keys = new Set(), pointers = new Map();
+  const driveButtons = [...document.querySelectorAll('.drive-button')];
+  const controllerInput = new Set();
+  let padIndex = null, padId = '', previousPadButtons = [], stickX = 0, stickY = 0;
+  let controllerNeedsNeutral = false, controllerUsed = false, controllerUI = '';
+  let inputFocused = document.hasFocus();
+  let audio = null, soundEnabled = false;
+
+  function announce(message) { $('announcement').textContent = message; }
+  function initAudio() {
+    if (!soundEnabled) return;
+    try {
+      const AudioClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioClass) return;
+      if (!audio) audio = new AudioClass();
+      if (audio.state === 'suspended') audio.resume().catch(() => {});
+    } catch (_) { /* Sound is optional in restrictive web views. */ }
+  }
+  function tone(frequency,duration = .09,kind = 'square',volume = .035,end = frequency) {
+    if (!soundEnabled || !audio || audio.state !== 'running') return;
+    const oscillator = audio.createOscillator(), gain = audio.createGain(), now = audio.currentTime;
+    oscillator.type = kind;
+    oscillator.frequency.setValueAtTime(frequency,now);
+    oscillator.frequency.exponentialRampToValueAtTime(Math.max(20,end),now + duration);
+    gain.gain.setValueAtTime(volume,now);
+    gain.gain.exponentialRampToValueAtTime(.0001,now + duration);
+    oscillator.connect(gain); gain.connect(audio.destination);
+    oscillator.start(now); oscillator.stop(now + duration);
+  }
+  function clearInput() {
+    keys.clear(); pointers.clear(); controllerInput.clear(); laneRepeat = 0;
+    stickX = stickY = 0; controllerNeedsNeutral = true;
+    // Keep menu-button history: a held Start must never repeatedly toggle pause.
+    driveButtons.forEach(button => button.classList.remove('is-held'));
+  }
+  function held(direction) { return keys.has(direction) || controllerInput.has(direction) || [...pointers.values()].includes(direction); }
+  function setState(next) {
+    state = next; clearInput(); accumulator = 0;
+    ui.start.hidden = next !== 'start'; ui.pause.hidden = next !== 'paused'; ui.over.hidden = next !== 'over';
+    ui.pauseButton.disabled = next !== 'playing' && next !== 'paused';
+    ui.pauseButton.textContent = next === 'paused' ? '▶ RESUME' : 'Ⅱ PAUSE';
+    ui.pauseButton.setAttribute('aria-label',next === 'paused' ? 'Resume game' : 'Pause game');
+    if (next === 'paused') $('resume-button').focus({preventScroll:true});
+    if (next === 'over') $('restart-button').focus({preventScroll:true});
+    if (next === 'playing') canvas.focus({preventScroll:true});
+    updateHUD();
+  }
+  function startGame() {
+    initAudio();
+    score = 0; lives = 3; wave = 1; elapsed = 0; speed = BASE_SPEED;
+    nitro = spin = invulnerable = crash = shake = 0;
+    spawnTimer = .85; pickupTimer = 1.45; rowsRemaining = 0;
+    entities = []; particles = []; floating = []; streaks = [];
+    waveBanner = 2.5; newRecord = finishing = false;
+    controllerUsed = false;
+    player.lane = 1; player.x = laneX(1); player.y = PLAYER_Y;
+    setState('playing'); announce('Run started. Three lives. Wave one.');
+    tone(330,.18,'sawtooth',.03,660);
+  }
+  function togglePause() {
+    if (state === 'playing' && !finishing) { setState('paused'); announce('Game paused.'); }
+    else if (state === 'paused') { initAudio(); setState('playing'); announce('Game resumed.'); }
+  }
+  function saveBest() {
+    if (Math.floor(score) <= best) return;
+    best = Math.floor(score); newRecord = true;
+    try { localStorage.setItem(STORAGE_KEY,String(best)); }
+    catch (_) { storageAvailable = false; }
+  }
+  function gameOver() {
+    saveBest();
+    $('final-score').textContent = format(score); $('final-best').textContent = format(best);
+    $('record-note').textContent = newRecord ? 'NEW HIGH SCORE. YOUR NIGHT, YOUR ROAD.' : 'THE ROAD ALWAYS WINS. EVENTUALLY.';
+    const minutes = Math.floor(elapsed / 60), seconds = Math.floor(elapsed % 60).toString().padStart(2,'0');
+    $('run-note').textContent = `WAVE ${String(wave).padStart(2,'0')} · ${minutes}:${seconds} ON THE ROAD${storageAvailable ? '' : ' · BEST SAVED FOR THIS SESSION'}`;
+    setState('over'); announce(`Game over. Score ${Math.floor(score)}. High score ${best}.`);
+    tone(160,.55,'sawtooth',.045,35);
+  }
+  function steer(direction) {
+    if (state !== 'playing' || spin > 0 || crash > 0 || finishing) return;
+    const next = clamp(player.lane + direction,0,3);
+    if (next !== player.lane) { player.lane = next; tone(130,.035,'triangle',.018,210); }
+  }
+  function controlPressed(direction) {
+    if (direction === 'left' || direction === 'right') {
+      steer(direction === 'left' ? -1 : 1); laneRepeat = .28;
+    }
+  }
+
+  // Browser "standard" mapping: D-pad 12–15, left stick axes 0–1,
+  // LT/L2 6, RT/R2 7, bottom face button 0, and Start/Menu/Options 9.
+  // Poll fresh snapshots BEFORE physics, including on menu and pause screens.
+  function controllerLabels(id) {
+    if (/dualsense|dualshock|playstation|sony|054c|^wireless controller(?:\s*\(|$)/i.test(id)) return { play:'✕',gas:'R2',brake:'L2',pause:'OPTIONS' };
+    if (/nintendo|switch|057e/i.test(id)) return { play:'B',gas:'ZR',brake:'ZL',pause:'+' };
+    return { play:'A',gas:'RT',brake:'LT',pause:'START / MENU' };
+  }
+  function showController(kind,id = '') {
+    const signature = `${kind}:${id}`;
+    if (signature === controllerUI) return;
+    controllerUI = signature;
+    const labels = controllerLabels(id), status = $('controller-status'), help = $('controller-help');
+    status.dataset.state = kind;
+    status.title = id;
+    const messages = {
+      waiting:['◇ CONTROLLER STANDBY','Pair a controller, then press any button to connect. D-pad / stick up and down also control gas and brake.'],
+      connected:['● CONTROLLER CONNECTED','D-pad / stick up and down also control gas and brake. The play button restarts after game over.'],
+      disconnected:['◇ CONTROLLER DISCONNECTED','Reconnect, or use keyboard / touch.'],
+      unsupported:['◇ CONTROLLER UNAVAILABLE','Use keyboard or touch in this browser.'],
+      blocked:['◇ CONTROLLER ACCESS BLOCKED','Open over HTTPS / localhost, or allow controller access.'],
+      unmapped:['◇ CONTROLLER NOT MAPPED','Your browser has not mapped this controller. Use a standard gamepad.']
+    };
+    [status.textContent,help.textContent] = messages[kind];
+    // Keep the button guide visible in every connection state; adapt its
+    // labels only after the browser identifies a standard-mapped controller.
+    const bindings = kind === 'connected' ? labels : { play:'A / ✕',gas:'RT / R2',brake:'LT / L2',pause:'START / OPTIONS' };
+    $('controller-gas').textContent = bindings.gas;
+    $('controller-brake').textContent = bindings.brake;
+    $('controller-play').textContent = bindings.play;
+    $('controller-pause').textContent = bindings.pause;
+    document.querySelectorAll('[data-controller-binding]').forEach(label => { label.textContent = bindings[label.dataset.controllerBinding]; });
+    $('start-screen').querySelector('.enter-hint').textContent = kind === 'connected' ? `PRESS ENTER OR ${labels.play} TO START` : 'PRESS ENTER TO START';
+    $('pause-screen').querySelector('.enter-hint').textContent = kind === 'connected' ? `ENTER / ESC OR ${labels.play} / ${labels.pause} TO RESUME` : 'ENTER / ESC TO RESUME';
+    $('over-screen').querySelector('.enter-hint').textContent = kind === 'connected' ? `PRESS ENTER OR ${labels.play} TO RESTART` : 'PRESS ENTER TO RESTART';
+  }
+  function releaseController() {
+    const wasUsed = controllerUsed;
+    padIndex = null; padId = ''; previousPadButtons = [];
+    controllerInput.clear(); stickX = stickY = 0; controllerNeedsNeutral = true; controllerUsed = false;
+    if (wasUsed && state === 'playing' && !finishing) { togglePause(); announce('Controller disconnected. Game paused.'); }
+  }
+  function stickDirection(value,previous) {
+    // Separate enter/release thresholds stop worn sticks chattering at an edge.
+    if (previous === -1 && value < -.2) return -1;
+    if (previous === 1 && value > .2) return 1;
+    return value < -.35 ? -1 : value > .35 ? 1 : 0;
+  }
+  function pollController() {
+    if (typeof navigator.getGamepads !== 'function') { if (padIndex !== null) releaseController(); showController('unsupported'); return; }
+    let pads;
+    try { pads = Array.from(navigator.getGamepads()).filter(pad => pad && pad.connected); }
+    catch (_) { if (padIndex !== null) releaseController(); showController('blocked'); return; }
+    let pad = pads.find(candidate => candidate.index === padIndex && candidate.id === padId && candidate.mapping === 'standard');
+    if (padIndex !== null && !pad) { releaseController(); showController('disconnected'); }
+    if (!pad) pad = pads.find(candidate => candidate.mapping === 'standard');
+    if (!pad) {
+      if (pads.length) showController('unmapped',pads[0].id);
+      else if (!controllerUI.startsWith('disconnected:')) showController('waiting');
+      return;
+    }
+    if (pad.index !== padIndex || pad.id !== padId) {
+      padIndex = pad.index; padId = pad.id; previousPadButtons = []; stickX = stickY = 0;
+      showController('connected',pad.id);
+    }
+    const down = (index,threshold = .5) => Boolean(pad.buttons[index]?.pressed) || (pad.buttons[index]?.value || 0) > threshold;
+    const buttons = Array.from(pad.buttons,button => Boolean(button.pressed) || button.value > .5);
+    const x = Number.isFinite(pad.axes[0]) ? pad.axes[0] : 0, y = Number.isFinite(pad.axes[1]) ? pad.axes[1] : 0;
+    const neutral = !buttons.some(Boolean) && !down(6,.25) && !down(7,.25) && Math.abs(x) < .2 && Math.abs(y) < .2;
+    const confirm = down(0) && !previousPadButtons[0], pause = down(9) && !previousPadButtons[9];
+    previousPadButtons = buttons;
+    if (!inputFocused || document.hidden) { controllerInput.clear(); controllerNeedsNeutral = true; return; }
+    if (controllerNeedsNeutral) {
+      // After focus loss, reconnect, or a menu transition, require release so
+      // an already-held button cannot restart or resume without a fresh press.
+      if (neutral) controllerNeedsNeutral = false;
+      controllerInput.clear(); return;
+    }
+    if (pause || (confirm && state !== 'playing')) {
+      if (state === 'start' || state === 'over') startGame();
+      else togglePause();
+      controllerUsed = true; return;
+    }
+    if (state !== 'playing') { controllerInput.clear(); return; }
+    stickX = stickDirection(x,stickX); stickY = stickDirection(y,stickY);
+    const left = down(14) || stickX < 0, right = down(15) || stickX > 0;
+    const next = new Set();
+    if (left !== right) next.add(left ? 'left' : 'right');
+    if (down(12) || stickY < 0 || down(7,.25)) next.add('up');
+    if (down(13) || stickY > 0 || down(6,.25)) next.add('down');
+    const pressed = [...next].filter(direction => !controllerInput.has(direction));
+    controllerInput.clear(); next.forEach(direction => controllerInput.add(direction));
+    if (next.size) controllerUsed = true;
+    pressed.forEach(controlPressed);
+  }
+  window.addEventListener('gamepadconnected',() => pollController());
+  window.addEventListener('gamepaddisconnected',event => {
+    if (event.gamepad.index === padIndex) { releaseController(); showController('disconnected'); }
+  });
+
+  const keyMap = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down', a:'left', d:'right', w:'up', s:'down' };
+  document.addEventListener('keydown',event => {
+    const direction = keyMap[event.key] || keyMap[event.key.toLowerCase()];
+    if (direction) {
+      // Do not steal page navigation until a run is active and focused.
+      if (state !== 'playing') return;
+      event.preventDefault();
+      if (!event.repeat && !keys.has(direction)) { keys.add(direction); controlPressed(direction); }
+      return;
+    }
+    if ((event.key === 'Escape' || event.key.toLowerCase() === 'p') && !event.repeat) { event.preventDefault(); togglePause(); }
+    if (event.key === 'Enter' && !event.repeat && event.target.tagName !== 'BUTTON') {
+      event.preventDefault();
+      if (state === 'start' || state === 'over') startGame();
+      else if (state === 'paused') togglePause();
+    }
+  });
+  document.addEventListener('keyup',event => {
+    const direction = keyMap[event.key] || keyMap[event.key.toLowerCase()];
+    if (direction) keys.delete(direction);
+  });
+  driveButtons.forEach(button => {
+    button.addEventListener('pointerdown',event => {
+      event.preventDefault();
+      if (state !== 'playing') return;
+      button.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId,button.dataset.input); button.classList.add('is-held');
+      controlPressed(button.dataset.input);
+    });
+    const release = event => { pointers.delete(event.pointerId); if (![...pointers.values()].includes(button.dataset.input)) button.classList.remove('is-held'); };
+    button.addEventListener('pointerup',release); button.addEventListener('pointercancel',release); button.addEventListener('lostpointercapture',release);
+    // Native button activation covers assistive tech and keyboard Space/Enter.
+    button.addEventListener('click',event => { if (event.detail === 0) controlPressed(button.dataset.input); });
+  });
+  let swipe = null;
+  canvas.addEventListener('pointerdown',event => { if (state === 'playing') { swipe = {id:event.pointerId,x:event.clientX}; canvas.setPointerCapture(event.pointerId); } });
+  canvas.addEventListener('pointermove',event => {
+    if (!swipe || swipe.id !== event.pointerId) return;
+    const delta = event.clientX - swipe.x;
+    if (Math.abs(delta) > canvas.getBoundingClientRect().width * .055) { steer(delta > 0 ? 1 : -1); swipe.x = event.clientX; }
+  });
+  canvas.addEventListener('pointerup',() => { swipe = null; });
+  canvas.addEventListener('pointercancel',() => { swipe = null; });
+  $('play-button').addEventListener('click',startGame); $('restart-button').addEventListener('click',startGame);
+  $('resume-button').addEventListener('click',togglePause); ui.pauseButton.addEventListener('click',togglePause);
+  ui.sound.addEventListener('click',() => {
+    soundEnabled = !soundEnabled; initAudio();
+    ui.sound.textContent = soundEnabled ? 'SOUND ON' : 'SOUND OFF';
+    ui.sound.setAttribute('aria-pressed',String(soundEnabled));
+    ui.sound.setAttribute('aria-label',soundEnabled ? 'Disable sound' : 'Enable sound');
+    if (soundEnabled) tone(550,.12,'triangle',.04,880);
+  });
+  function suspendRun() { inputFocused = false; clearInput(); swipe = null; if (state === 'playing' && !finishing) togglePause(); }
+  window.addEventListener('blur',suspendRun);
+  window.addEventListener('focus',() => { inputFocused = !document.hidden; });
+  document.addEventListener('visibilitychange',() => { inputFocused = !document.hidden; if (document.hidden) suspendRun(); });
+  window.addEventListener('pagehide',() => { saveBest(); suspendRun(); });
+
+  // Safety invariant: every active hazard belongs to three lanes at most.
+  // A convoy reserves one entire lane, INCLUDING oil/tires. Change the reserved
+  // lane only after all old hazards exit. Different car speeds cannot seal it.
+  // This stronger rule guarantees a continuous, unobstructed escape route.
+  function spawnRow() {
+    const oldHazards = entities.some(entity => !entity.dead && isHazard(entity));
+    if (rowsRemaining <= 0) {
+      if (oldHazards) return;
+      escapeLane = Math.floor(Math.random() * 4);
+      rowsRemaining = Math.min(9,4 + Math.floor(wave / 2));
+    }
+    const available = [0,1,2,3].filter(lane => lane !== escapeLane && !entities.some(entity => !entity.dead && entity.lane === lane && Math.abs(entity.y + 105) < 125));
+    // Fisher–Yates keeps every lane arrangement equally likely.
+    for (let i = available.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [available[i],available[j]] = [available[j],available[i]]; }
+    const count = Math.random() < Math.min(.72,.22 + wave * .055) ? 3 : (Math.random() < .56 ? 2 : 1);
+    const barrierChance = Math.min(.72,.16 + (wave - 1) * .055);
+    for (const lane of available.slice(0,count)) {
+      const roll = Math.random();
+      const type = roll < barrierChance ? 'barrier' : roll < barrierChance + .08 ? 'oil' : roll < barrierChance + .13 ? 'tire' : 'car';
+      entities.push(makeEntity(type,lane,-105));
+    }
+    if (available.length) rowsRemaining--;
+  }
+  function makeEntity(type,lane,y) {
+    const sizes = { car:[48,82], barrier:[90,36], oil:[79,35], tire:[37,39], coin:[28,28], nitro:[32,43] };
+    const [width,height] = sizes[type];
+    return { type,lane,x:laneX(lane),y,previousY:y,width,height,dead:false,phase:random(0,Math.PI * 2),speedFactor:type === 'car' ? random(.73,.88) : 1,color:pick(['#f6ba62','#9c91ff','#ff7c9d','#75d1ce']),points:type === 'barrier' ? 150 : type === 'car' ? 100 : 75 };
+  }
+  function spawnPickup() {
+    // Spawn into an open cell above the viewport, with room for both hitboxes.
+    const lanes = [0,1,2,3].filter(lane => !entities.some(entity => !entity.dead && entity.lane === lane && Math.abs(entity.y + 105) < 155));
+    if (!lanes.length) return;
+    const lane = Math.random() < .65 && lanes.includes(escapeLane) ? escapeLane : pick(lanes);
+    const type = Math.random() < .19 ? 'nitro' : 'coin';
+    entities.push(makeEntity(type,lane,-105));
+  }
+  function burst(x,y,color,count = 18,force = 1) {
+    const amount = reducedMotion ? Math.ceil(count / 3) : count;
+    for (let i = 0; i < amount; i++) {
+      const angle = random(0,Math.PI * 2), velocity = random(35,210) * force;
+      particles.push({x,y,vx:Math.cos(angle) * velocity,vy:Math.sin(angle) * velocity,color,life:random(.25,.75),maxLife:.75,size:random(2,6)});
+    }
+  }
+  function popup(text,x,y,color) { floating.push({text,x,y,color,life:1.15}); }
+  function hitEntity(entity) {
+    if (entity.dead) return;
+    const {type,x,y} = entity;
+    if (type === 'coin') {
+      entity.dead = true; score += COIN_POINTS; popup('+500',x,y,'#ffe08a'); burst(x,y,'#ffe08a',14,.65); tone(900,.1,'square',.025,1500); return;
+    }
+    if (type === 'nitro') {
+      entity.dead = true; nitro = NITRO_SECONDS; spin = 0; invulnerable = Math.max(invulnerable,NITRO_SECONDS);
+      popup('NITRO ONLINE',player.x,player.y - 60,'#63f8ec'); burst(x,y,'#63f8ec',25); tone(280,.3,'sawtooth',.035,1400); announce('Nitro. Invincible for five seconds.'); return;
+    }
+    if (nitro > 0) {
+      entity.dead = true; score += entity.points * 2; popup(`SMASH +${entity.points * 2}`,x,y,'#63f8ec'); burst(x,y,type === 'car' ? entity.color : '#ffe08a',26,1.2); tone(110,.09,'sawtooth',.035,45); return;
+    }
+    if (invulnerable > 0 || crash > 0) return;
+    entity.dead = true;
+    if (type === 'oil' || type === 'tire') {
+      spin = SPIN_SECONDS; player.lane = clamp(Math.round((player.x - laneX(0)) / ROAD.laneWidth),0,3);
+      popup('SPIN OUT!',player.x,player.y - 68,'#ff559c'); burst(x,y,'#9396ad',12,.65); tone(320,.3,'sawtooth',.04,65); announce('Spin out. Steering locked for three seconds.');
+      return;
+    }
+    lives--; crash = .78; invulnerable = 2.4; spin = 0; shake = reducedMotion ? 0 : 12;
+    burst(player.x,player.y,'#ff6b3d',46,1.5); burst(player.x,player.y,'#ffe08a',24,1.2);
+    popup(lives ? 'CRASH! −1 LIFE' : 'LAST EXIT',player.x,player.y - 85,'#ff559c');
+    tone(100,.45,'sawtooth',.07,23); announce(`Crash. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`);
+    finishing = lives <= 0; updateHUD();
+  }
+  function collides(entity,oldPlayerX) {
+    // Swept bounds prevent a fast hazard from tunneling through the player.
+    const halfW = (player.width + entity.width) / 2 - (entity.type === 'oil' ? 8 : 7);
+    const halfH = (player.height + entity.height) / 2 - 10;
+    return Math.min(oldPlayerX,player.x) - halfW < entity.x && Math.max(oldPlayerX,player.x) + halfW > entity.x && Math.min(entity.previousY,entity.y) - halfH < player.y && Math.max(entity.previousY,entity.y) + halfH > player.y;
+  }
+  function updateEffects(dt) {
+    for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 100 * dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+    for (const p of floating) { p.y -= 42 * dt; p.life -= dt; }
+    floating = floating.filter(p => p.life > 0);
+    shake = Math.max(0,shake - dt * 25);
+  }
+  function update(dt) {
+    sceneTime += dt; updateEffects(dt);
+    if (state !== 'playing') {
+      if (state === 'start' && !reducedMotion) { roadOffset = (roadOffset + 75 * dt) % 108; sceneryOffset = (sceneryOffset + 30 * dt) % 90; }
+      return;
+    }
+    elapsed += dt;
+    const nextWave = 1 + Math.floor(elapsed / WAVE_SECONDS);
+    if (nextWave > wave) { wave = nextWave; waveBanner = 2.7; popup(`WAVE ${wave} · +15% SPEED`,400,230,'#ffe08a'); tone(440,.25,'triangle',.035,880); announce(`Wave ${wave}. Traffic speed increased fifteen percent.`); }
+    waveBanner = Math.max(0,waveBanner - dt);
+    nitro = Math.max(0,nitro - dt); spin = Math.max(0,spin - dt); invulnerable = Math.max(0,invulnerable - dt);
+    const accelerating = held('up') && !held('down'), braking = held('down');
+    const factor = nitro > 0 ? 2.3 : braking ? .52 : accelerating ? 1.65 : 1;
+    const base = BASE_SPEED * Math.pow(1.15,wave - 1);
+    // Physics uses a fixed timestep and sweeps collision bounds as waves speed up.
+    speed += (base * factor - speed) * (1 - Math.exp(-dt * 5));
+    const travel = speed * dt * (crash > 0 ? .3 : 1);
+    roadOffset = (roadOffset + travel) % 108; sceneryOffset = (sceneryOffset + travel * .6) % 90;
+    if (crash > 0) {
+      crash = Math.max(0,crash - dt);
+      if (crash === 0 && finishing) { gameOver(); return; }
+    } else if (!finishing) {
+      score += dt * 14 * (nitro > 0 || accelerating ? 2 : braking ? .5 : 1);
+      laneRepeat -= dt;
+      if (laneRepeat <= 0 && (held('left') !== held('right'))) { steer(held('left') ? -1 : 1); laneRepeat = .17; }
+      spawnTimer -= dt; pickupTimer -= dt;
+      if (spawnTimer <= 0) { spawnRow(); spawnTimer = Math.max(.46,1.05 - (wave - 1) * .048); }
+      if (pickupTimer <= 0) { spawnPickup(); pickupTimer = random(1.1,2.1); }
+    }
+    const oldPlayerX = player.x;
+    player.x += (laneX(player.lane) - player.x) * (1 - Math.exp(-dt * 15));
+    for (const entity of entities) {
+      entity.previousY = entity.y; entity.y += travel * entity.speedFactor;
+    }
+    // Power-ups resolve first when bounds touch two items in the same tick.
+    for (const entity of entities) { if (!isHazard(entity) && collides(entity,oldPlayerX) && !finishing) hitEntity(entity); }
+    for (const entity of entities) { if (isHazard(entity) && collides(entity,oldPlayerX) && !finishing) hitEntity(entity); }
+    entities = entities.filter(entity => !entity.dead && entity.y < H + 130);
+    if (nitro > 0 && !reducedMotion && Math.random() < dt * 55) {
+      streaks.push({x:random(ROAD.left + 8,ROAD.right - 8),y:random(-100,H),length:random(35,100),life:.3});
+    }
+    for (const streak of streaks) { streak.y += travel * 2; streak.life -= dt; }
+    streaks = streaks.filter(streak => streak.life > 0 && streak.y < H + 100);
+    hudTimer += dt;
+    if (hudTimer >= .08) { hudTimer = 0; updateHUD(); }
+  }
+  function updateHUD() {
+    ui.score.textContent = format(score); ui.best.textContent = format(best); ui.wave.textContent = String(wave).padStart(2,'0');
+    ui.lives.textContent = '♥'.repeat(lives) + '♡'.repeat(3 - lives); ui.lives.setAttribute('aria-label',`${lives} lives`);
+    if (state === 'start') { ui.status.textContent = 'READY TO ROLL'; ui.status.style.color = '#63f8ec'; ui.speed.textContent = '4 LANES · NO FINISH LINE'; return; }
+    if (state === 'over') { ui.status.textContent = newRecord ? 'NEW RECORD' : 'END OF THE ROAD'; ui.speed.textContent = 'INSERT COIN TO TRY AGAIN'; return; }
+    ui.status.textContent = state === 'paused' ? 'PAUSED' : crash > 0 ? 'CRASH / RECOVERING' : nitro > 0 ? `ϟ NITRO / ${nitro.toFixed(1)}s` : spin > 0 ? `⊗ SPIN OUT / ${spin.toFixed(1)}s` : held('down') ? 'BRAKING / ½ SCORE' : held('up') ? 'FULL THROTTLE / 2× SCORE' : 'CRUISE / STAY SHARP';
+    ui.status.style.color = spin > 0 || crash > 0 ? '#ff559c' : '#63f8ec';
+    ui.speed.textContent = `WAVE UP IN ${Math.ceil(WAVE_SECONDS - elapsed % WAVE_SECONDS)}s · ${Math.round(speed / BASE_SPEED * 120)} KM/H`;
+  }
+
+  // Primitive artwork: hard-edged cars, striped barricades, neon pavement,
+  // procedural city blocks, roadside lamps, and a miniature analog dashboard.
+  function rect(x,y,w,h,color) { ctx.fillStyle = color; ctx.fillRect(x,y,w,h); }
+  function line(x1,y1,x2,y2,color,width = 1) { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+  function polygon(points,color) { ctx.fillStyle = color; ctx.beginPath(); points.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); ctx.closePath(); ctx.fill(); }
+  function neonRect(x,y,w,h,color,glow = 8) { ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = glow; rect(x,y,w,h,color); ctx.restore(); }
+  function drawRoad() {
+    rect(0,0,W,H,'#0b0c1b');
+    const ground = ctx.createLinearGradient(0,0,W,0); ground.addColorStop(0,'#161227'); ground.addColorStop(.22,'#181529'); ground.addColorStop(.5,'#111426'); ground.addColorStop(.78,'#181529'); ground.addColorStop(1,'#161227'); ctx.fillStyle = ground; ctx.fillRect(0,0,W,H);
+    // City blocks and neon window patterns use deterministic coordinates.
+    for (const side of [0,1]) {
+      for (let row = -2; row < 9; row++) {
+        const y = row * 90 + sceneryOffset, x = side ? 684 : 19;
+        rect(x,y,96,69,'#201932'); rect(x + 4,y + 4,88,61,'#131428');
+        line(x,y,x + 96,y,'#4d2957',2);
+        for (let windowRow = 0; windowRow < 3; windowRow++) for (let column = 0; column < 7; column++) {
+          if ((column * 5 + windowRow * 3 + row + 60) % 4 !== 0) rect(x + 9 + column * 12,y + 12 + windowRow * 15,5,5,(column + row + 40) % 3 === 0 ? '#a3447b' : '#33566e');
+        }
+      }
+    }
+    rect(ROAD.left,0,ROAD.right - ROAD.left,H,'#121727');
+    // Subtle asphalt strips add texture without external assets.
+    for (let i = 0; i < 32; i++) { const y = (i * 29 + roadOffset * .7) % H; rect(172 + (i * 73) % 453,y,19,1,'#1c2236'); }
+    rect(147,0,10,H,'#241b37'); rect(643,0,10,H,'#241b37');
+    neonRect(157,0,3,H,'#ff559c',10); neonRect(640,0,3,H,'#ff559c',10);
+    line(ROAD.left + 12,0,ROAD.left + 12,H,'#72517b'); line(ROAD.right - 12,0,ROAD.right - 12,H,'#72517b');
+    for (let lane = 1; lane < 4; lane++) {
+      const x = ROAD.left + lane * ROAD.laneWidth;
+      for (let y = -108 + roadOffset; y < H; y += 108) { neonRect(x - 1,y,2,48,'#53baad',4); }
+    }
+    for (let y = -90 + sceneryOffset; y < H + 90; y += 90) {
+      for (const x of [132,667]) {
+        rect(x - 2,y,4,28,'#374453'); neonRect(x - 6,y,12,5,'#63f8ec',12);
+        ctx.fillStyle = '#63f8ec07'; ctx.beginPath(); ctx.arc(x,y + 3,31,0,Math.PI * 2); ctx.fill();
+      }
+      rect(146,y + 39,8,21,'#764365'); rect(646,y + 39,8,21,'#764365');
+    }
+    // Pavement edge vignette keeps the central action readable.
+    const vignette = ctx.createLinearGradient(ROAD.left,0,ROAD.right,0);
+    vignette.addColorStop(0,'#0006'); vignette.addColorStop(.18,'#0000'); vignette.addColorStop(.82,'#0000'); vignette.addColorStop(1,'#0006'); ctx.fillStyle = vignette; ctx.fillRect(ROAD.left,0,480,H);
+  }
+  function drawCar(x,y,color,isPlayer = false,angle = 0) {
+    ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
+    rect(-29,-32,58,74,'#0005');
+    if (isPlayer && nitro > 0) {
+      ctx.shadowColor = '#63f8ec'; ctx.shadowBlur = 26; rect(-27,-43,54,86,'#63f8ec'); ctx.shadowBlur = 0;
+      polygon([[-15,39],[-7,66 + Math.sin(sceneTime * 31) * 12],[0,43]],'#63f8ec'); polygon([[1,43],[9,72 + Math.cos(sceneTime * 30) * 10],[17,39]],'#8be9ff');
+    }
+    for (const yWheel of [-26,23]) { rect(-27,yWheel,7,18,'#050710'); rect(20,yWheel,7,18,'#050710'); }
+    polygon([[-18,-42],[18,-42],[23,-28],[23,33],[17,42],[-17,42],[-23,33],[-23,-28]],color);
+    rect(-17,-35,34,9,isPlayer ? '#c4ffe9' : '#ffe6bc');
+    rect(-19,-25,38,16,'#0b172b'); polygon([[-15,-23],[14,-23],[18,-12],[-18,-12]],isPlayer ? '#356481' : '#354863');
+    rect(-16,-23,5,11,'#68bbd078'); rect(-20,9,40,17,'#131f37'); rect(-16,12,32,8,'#2a3c53');
+    rect(-18,-6,36,12,isPlayer ? '#68dcc2' : color); line(-16,1,16,1,'#ffffff30');
+    rect(-20,30,40,5,isPlayer ? '#245561' : '#21263b');
+    rect(-18,-40,10,4,'#f9f4bf'); rect(8,-40,10,4,'#f9f4bf');
+    neonRect(-18,35,9,4,'#ff5077',6); neonRect(9,35,9,4,'#ff5077',6);
+    if (isPlayer) { rect(-3,-7,6,17,'#e8f9f0'); rect(-3,-34,6,7,'#0f3b42'); rect(-24,27,48,3,'#c3f9e5'); }
+    if (isPlayer && nitro <= 0) {
+      ctx.fillStyle = '#ffe8b007'; polygon([[-18,-40],[-48,-126],[-1,-126],[-8,-40]],'#ffe8b008'); polygon([[8,-40],[1,-126],[48,-126],[18,-40]],'#ffe8b008');
+    }
+    ctx.restore();
+  }
+  function drawBarrier(entity) {
+    const {x,y} = entity; ctx.save(); ctx.translate(x,y);
+    rect(-43,12,86,9,'#0007'); rect(-36,-5,7,28,'#b9a2a0'); rect(29,-5,7,28,'#b9a2a0');
+    rect(-45,-18,90,32,'#fad278'); rect(-42,-15,84,26,'#262135');
+    ctx.save(); ctx.beginPath(); ctx.rect(-42,-15,84,26); ctx.clip();
+    for (let i = -65; i < 60; i += 25) polygon([[i,-15],[i + 13,-15],[i + 32,11],[i + 19,11]],'#ffbd65'); ctx.restore();
+    neonRect(-43,-23,8,5,'#ff559c',7); neonRect(35,-23,8,5,'#ff559c',7);
+    ctx.restore();
+  }
+  function drawOil(entity) {
+    const {x,y,phase} = entity; ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = '#050910'; ctx.beginPath(); ctx.ellipse(0,0,40,18,-.1,0,Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8263b4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(-2,-1,31,12,-.12,.2,5.5); ctx.stroke();
+    ctx.strokeStyle = '#439d99'; ctx.beginPath(); ctx.ellipse(3,1,22,7,.1,1.9,5.9); ctx.stroke();
+    line(-13,-4,11,-5,'#ba7dd0',2); ctx.restore();
+  }
+  function drawTire(entity) {
+    ctx.save(); ctx.translate(entity.x,entity.y); ctx.rotate(Math.sin(sceneTime * 2 + entity.phase) * .18);
+    ctx.fillStyle = '#070b14'; ctx.strokeStyle = '#d298b9'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0,0,17,20,0,0,Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#454958'; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(0,0,8,12,0,0,Math.PI * 2); ctx.stroke();
+    polygon([[4,-21],[-3,-5],[5,-2],[-3,17],[10,0],[2,-4],[13,-19]],'#ff559c'); ctx.restore();
+  }
+  function drawCoin(entity) {
+    const {x,y,phase} = entity, squash = .78 + Math.sin(sceneTime * 5 + phase) * .22;
+    ctx.save(); ctx.translate(x,y); ctx.scale(squash,1); ctx.shadowColor = '#ffe08a'; ctx.shadowBlur = 13;
+    ctx.fillStyle = '#e5a83e'; ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.arc(-1,-1,11,0,Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#996222'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(-1,-1,7.5,0,Math.PI * 2); ctx.stroke();
+    rect(-2,-6,2,11,'#9e6728'); rect(-5,-1,8,2,'#9e6728'); ctx.restore();
+  }
+  function drawNitro(entity) {
+    ctx.save(); ctx.translate(entity.x,entity.y + Math.sin(sceneTime * 4 + entity.phase) * 3);
+    ctx.shadowColor = '#63f8ec'; ctx.shadowBlur = 15;
+    polygon([[-13,-19],[13,-19],[18,-10],[14,19],[-14,19],[-18,-10]],'#1c6681');
+    ctx.strokeStyle = '#63f8ec'; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0;
+    rect(-7,-24,14,5,'#b7faf6'); polygon([[3,-14],[-9,2],[-1,2],[-4,15],[10,-3],[2,-3]],'#c1fff4'); ctx.restore();
+  }
+  function draw() {
+    ctx.save();
+    if (shake > 0) ctx.translate(Math.sin(sceneTime * 81) * shake,Math.cos(sceneTime * 69) * shake * .45);
+    drawRoad();
+    for (const streak of streaks) line(streak.x,streak.y,streak.x,streak.y + streak.length,'#63f8ec55',1);
+    // Sort the tiny entity list for visually consistent vertical layering.
+    for (const entity of [...entities].sort((a,b) => a.y - b.y)) {
+      if (entity.type === 'car') drawCar(entity.x,entity.y,entity.color);
+      else if (entity.type === 'barrier') drawBarrier(entity);
+      else if (entity.type === 'oil') drawOil(entity);
+      else if (entity.type === 'tire') drawTire(entity);
+      else if (entity.type === 'coin') drawCoin(entity);
+      else drawNitro(entity);
+    }
+    if (!finishing && !(invulnerable > 0 && nitro <= 0 && Math.floor(sceneTime * 14) % 2 === 0)) {
+      const angle = spin > 0 ? sceneTime * 19 : clamp((laneX(player.lane) - player.x) / 260,-.18,.18);
+      drawCar(player.x,player.y,nitro > 0 ? '#73deff' : '#8bf0ce',true,angle);
+    }
+    for (const particle of particles) { ctx.globalAlpha = Math.min(1,particle.life * 2); rect(particle.x,particle.y,particle.size,particle.size,particle.color); }
+    ctx.globalAlpha = 1;
+    for (const pop of floating) { ctx.globalAlpha = Math.min(1,pop.life * 2); ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#090b16'; ctx.fillText(pop.text,pop.x + 2,pop.y + 2); ctx.fillStyle = pop.color; ctx.fillText(pop.text,pop.x,pop.y); }
+    ctx.globalAlpha = 1;
+    if (state === 'playing') {
+      if (nitro > 0 || spin > 0) {
+        const timer = nitro > 0 ? nitro / NITRO_SECONDS : spin / SPIN_SECONDS, color = nitro > 0 ? '#63f8ec' : '#ff559c';
+        rect(player.x - 30,player.y + 51,60,4,'#41445b'); neonRect(player.x - 30,player.y + 51,60 * timer,4,color,6);
+      }
+      if (waveBanner > 0) {
+        ctx.globalAlpha = Math.min(1,waveBanner);
+        ctx.textAlign = 'center'; ctx.font = 'bold 11px monospace'; ctx.fillStyle = '#ffe08a'; ctx.fillText(`— W A V E  ${String(wave).padStart(2,'0')} —`,400,115); ctx.globalAlpha = 1;
+      }
+      // Minimal speedometer set into the roadside, away from hazards.
+      ctx.save(); ctx.translate(720,500); ctx.strokeStyle = '#494360'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,33,Math.PI * .75,Math.PI * 2.25); ctx.stroke();
+      const t = clamp(speed / (BASE_SPEED * Math.pow(1.15,wave - 1) * 2.3),0,1), angle = Math.PI * (.75 + t * 1.5);
+      line(0,0,Math.cos(angle) * 27,Math.sin(angle) * 27,nitro > 0 ? '#63f8ec' : '#ff559c',2); rect(-2,-2,4,4,'#e9e9f4');
+      ctx.textAlign = 'center'; ctx.font = '9px monospace'; ctx.fillStyle = '#9196b0'; ctx.fillText('THROTTLE',0,52); ctx.restore();
+    }
+    ctx.restore();
+  }
+  function resize() {
+    const ratio = Math.min(window.devicePixelRatio || 1,2);
+    canvas.width = Math.round(W * ratio); canvas.height = Math.round(H * ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0); ctx.imageSmoothingEnabled = false;
+  }
+  window.addEventListener('resize',resize); resize(); updateHUD();
+  function frame(now) {
+    pollController();
+    driveButtons.forEach(button => button.classList.toggle('is-held',state === 'playing' && held(button.dataset.input)));
+    const dt = lastFrame ? Math.min((now - lastFrame) / 1000,.1) : 0;
+    lastFrame = now;
+    // Pausing freezes all simulation timers, including five-second nitro.
+    if (state === 'paused' || state === 'over') { draw(); requestAnimationFrame(frame); return; }
+    accumulator += dt;
+    while (accumulator >= STEP) { update(STEP); accumulator -= STEP; if (state === 'over') { accumulator = 0; break; } }
+    draw(); requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1774 @@
+{
+  "space_id": "295535334209633",
+  "stories": [
+    {
+      "name": "Studio homepage",
+      "slug": "studio-home",
+      "content": {
+        "component": "bzy_studio_home",
+        "_uid": "2beadc02-1ec5-47a1-a084-3f40c022957a",
+        "headline": "Little things.",
+        "second_line": "Better days.",
+        "description": "Thoughtful apps, playful detours, and ideas that make everyday life a little more you.",
+        "featured_app": "roametry"
+      }
+    },
+    {
+      "name": "Back The Pack",
+      "slug": "back-the-pack",
+      "folder": "apps",
+      "content": {
+        "_uid": "8bcebf97-d9e9-4fde-8899-351903b990b2",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "available",
+        "short_description": "Care details, together. Keep everyday care notes in one private place—now with glucose input, vitals, medications, meals, hydration, and doctor-visit prep.",
+        "eyebrow": "Appsurd · care logging for families",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/back-the-pack/hero.webp",
+          "alt": "Three Back The Pack app screens showing care records, glucose logging, and vitals",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": "https://apps.apple.com/us/app/back-the-pack/id6805175460"
+        },
+        "palette": "brass",
+        "notice": "Back The Pack is designed for organization and record keeping. It does not diagnose conditions, provide medical advice, or replace guidance from a licensed medical professional.",
+        "body": [
+          {
+            "_uid": "a13d7bae-cecf-4530-aae7-fd7d1503013d",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Back The Pack is a private care logging app built to help families stay organized when supporting a loved one. Track daily care details in one place, from vitals and medications to hydration, meals, restroom activity, notes, and doctor visit preparation."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Care records in one view"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Medication plans, schedules, and recorded doses"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Glucose and vitals logging"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Doctor visit notes and reports"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Saved records and trends"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Optional read-only Apple Health import"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Local-first storage for personal care records"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Widgets for quick visibility"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "23a326c2-1b94-4cee-b188-9b54322dccdc",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/back-the-pack/lifestyle.jpg",
+                "alt": "Back The Pack promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/back-the-pack/dashboard.png",
+                "alt": "Back The Pack care dashboard",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/back-the-pack/glucose-log.png",
+                "alt": "Back The Pack glucose log",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/back-the-pack/medical-sources.png",
+                "alt": "Back The Pack medical information and sources screen",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sensory Seek",
+      "slug": "sensory-seek",
+      "folder": "apps",
+      "content": {
+        "_uid": "f27d9736-a6cf-4a15-b462-0a015ebf1739",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "available",
+        "short_description": "Know before you go. Community sensory reports for noise, lighting, and crowds—plus Soothe tools when you need a calmer moment.",
+        "eyebrow": "App · sensory support",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/sensory-seek/hero.webp",
+          "alt": "Sensory Seek map and Soothe screens",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": "https://apps.apple.com/us/app/sensoryseek/id6806780705"
+        },
+        "palette": "sea-glass",
+        "notice": "Community reports reflect conditions at submission time. Noise readings are estimates. Sensory Seek is not medical or emergency care.",
+        "body": [
+          {
+            "_uid": "54c03b29-5df1-4b7a-b80f-94e4991c29d6",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Sensory Seek helps neurodivergent people and caregivers understand what a place might feel like before they arrive—then find calm when they need it. Community reports, Plan B, and caregiver tools are available on the App Store."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Community ratings for noise, lighting, and crowds"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Quick reports with amenity tags and notes"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Nearby calmer options when a place feels like too much"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Soothe tools for sound, breathing, liquid motion, and nature loops"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Caregiver tools with trusted contacts and prepared messages"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Local tools without an account"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "12ef4d05-50ed-4de5-ac30-28c6c645990c",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/sensory-seek/lifestyle.jpg",
+                "alt": "Sensory Seek promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/sensory-seek/map.jpg",
+                "alt": "Sensory Seek sensory report map",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/sensory-seek/soothe.jpg",
+                "alt": "Sensory Seek Soothe breathing screen",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/sensory-seek/profile.jpg",
+                "alt": "Sensory Seek profile screen",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Hold My Place",
+      "slug": "hold-my-place",
+      "folder": "apps",
+      "content": {
+        "_uid": "1b7d4dd9-e32b-48fe-baf7-9490552deeb3",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "available",
+        "short_description": "Keep every next step, progress note, hardware list, photo, and reminder together—right where the work happens.",
+        "eyebrow": "Appsurd · job-site memory for DIY",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/hold-my-place/hero.webp",
+          "alt": "Three Hold My Place app screens showing projects, next steps, and a jukebox",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": "https://apps.apple.com/us/app/hold-my-place/id6809287781"
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "6fd348f0-3e47-4cfd-9d76-6bac3a3ebc69",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hold My Place keeps every next step, progress note, hardware list, photo, and reminder together—right where the work happens. It is local-first on your iPhone, so interrupted projects are easier to pick back up."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "One clear next step for every project"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Progress notes and photos"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Combined hardware list"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Local reminders"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "On-device label and barcode help"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Siri and Voice when hands are full"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Mood Boost jukebox"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "No account and local-first storage"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "61a7d877-2187-430a-8fba-74a73aeb0d97",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/hold-my-place/lifestyle.jpg",
+                "alt": "Hold My Place promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/hold-my-place/project-overview.jpg",
+                "alt": "Hold My Place project overview",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/hold-my-place/project-detail.jpg",
+                "alt": "Hold My Place project detail and next step",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/hold-my-place/jukebox.jpg",
+                "alt": "Hold My Place Mood Boost jukebox",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Scroll in Peace",
+      "slug": "scroll-in-peace",
+      "folder": "apps",
+      "content": {
+        "_uid": "10831bce-fd50-4781-813e-b24efe03ed8c",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "available",
+        "short_description": "A calmer Safari with powerful filters and clear control. EasyList and EasyPrivacy convert on your device—pause, refresh, and see what is protecting you.",
+        "eyebrow": "App · mindful technology",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/scroll-in-peace/hero.webp",
+          "alt": "Scroll in Peace iPhone and desktop protection dashboards",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": "https://apps.apple.com/us/app/scroll-in-peace/id6810617183"
+        },
+        "palette": "brass",
+        "notice": "The App Store app protects Safari. Desktop Chrome, Edge, and Firefox use separate extension editions.",
+        "body": [
+          {
+            "_uid": "0544cc2e-1345-4901-9d4d-10ccf41171ae",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Scroll in Peace helps reduce supported advertising, tracking requests, and page clutter in Safari—with on-device EasyList and EasyPrivacy conversion and clear filter control."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "On-device EasyList and EasyPrivacy filters"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Separate Ads & Cleanup and Privacy controls"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Optional cookie-banner and nag-screen cleanup"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Caregiver Shield for recognized deceptive prompts"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Visible, user-controlled protection status"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "No account and no browsing history sent to the developer"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "37934fcb-99f2-40e7-ae28-12573a6b6cc0",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/scroll-in-peace/lifestyle.jpg",
+                "alt": "Scroll in Peace promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/scroll-in-peace/dashboard.jpg",
+                "alt": "Scroll in Peace resource dashboard",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/scroll-in-peace/extension-popup.jpg",
+                "alt": "Scroll in Peace browser extension popup",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/scroll-in-peace/options.jpg",
+                "alt": "Scroll in Peace browser extension options",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Roametry",
+      "slug": "roametry",
+      "folder": "apps",
+      "content": {
+        "_uid": "c60a34cf-04a8-4f3d-bb9c-0b90e098d400",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "available",
+        "short_description": "Turn trips, concerts, dinners, and everyday adventures into beautiful private stories. Plan the days, capture the moments, and keep your Roams on your device.",
+        "eyebrow": "Appsurd · travel memories, privately kept",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/roametry/hero.webp",
+          "alt": "Three Roametry travel memory screens",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": "https://apps.apple.com/us/app/roametry/id6806166399"
+        },
+        "palette": "brass",
+        "notice": "Roametry is designed for personal memories and planning. Location features are optional and controlled by you.",
+        "body": [
+          {
+            "_uid": "2f3f61a0-c1c7-419f-95a9-95427eba05a9",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Roametry turns trips, concerts, dinners, and everyday adventures into beautiful private stories. Plan the days, capture the moments, and keep your Roams on your device."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Create a Roam for any adventure"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Capture photos, notes, and voice memos"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Day-by-day journey timeline"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Simple itinerary planning"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Maps with privacy in mind"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Fit Check for carry-ons"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Local-first stories kept on your device"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Warm, scrapbook-inspired design"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "73157083-f4e7-43a7-9ba3-f692f3e9ec55",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/roametry/lifestyle.jpg",
+                "alt": "Roametry promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/roametry/home.jpg",
+                "alt": "Roametry memories home screen",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/roametry/active-trip.jpg",
+                "alt": "Roametry active trip screen",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/roametry/capture.jpg",
+                "alt": "Roametry capture screen",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "What's That Hue?",
+      "slug": "whats-that-hue",
+      "folder": "apps",
+      "content": {
+        "_uid": "70fe42f9-cf9d-41d0-af12-d080b39073ba",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "Point, hold, and save. A calm camera color notebook for the hues you want to remember—names, HEX, palettes, and a collection that stays on your device.",
+        "eyebrow": "App · color notebook",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/whats-that-hue/hero.webp",
+          "alt": "Three What's That Hue? color notebook screens",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "sea-glass",
+        "notice": "Camera values depend on lighting. ΔE is a distance, not confidence. This app is not a certified paint instrument.",
+        "body": [
+          {
+            "_uid": "a0d50c40-207f-49ad-98fc-0f465748e8da",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "What's That Hue? is a native color notebook for precise sampling, honest color science, and a calm lavender studio. Captures stay on your device."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Center-pixel or 5×5 mean color sampling"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Friendly names, HEX, RGB, and HSL values"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Review before you keep with undo"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Searchable color collection"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Studio themes and palettes"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Local-first captures with no account"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "_uid": "1c078c79-fab8-49b2-bc95-1439678a8439",
+            "component": "gallery",
+            "images": [
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/whats-that-hue/lifestyle.jpg",
+                "alt": "What's That Hue? promotional image",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/whats-that-hue/scan.jpg",
+                "alt": "What's That Hue? scan screen",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/whats-that-hue/studio.jpg",
+                "alt": "What's That Hue? studio screen",
+                "title": ""
+              },
+              {
+                "id": 0,
+                "fieldtype": "asset",
+                "filename": "/images/apps/whats-that-hue/collection.jpg",
+                "alt": "What's That Hue? color collection",
+                "title": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lifetility",
+      "slug": "lifetility",
+      "folder": "apps",
+      "content": {
+        "_uid": "af7e2173-df77-47cd-93bf-e806bd26e26c",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "Keep receipts, trials, returns, warranties, and refund records together, with deadlines you review and confirm.",
+        "eyebrow": "Life admin, lighter.",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/lifetility/illustration.svg",
+          "alt": "Abstract illustration for Lifetility",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "sea-glass",
+        "notice": "Calendar reminders require importing the calendar file. Lifetility does not connect to your bank or cancel subscriptions for you.",
+        "body": [
+          {
+            "_uid": "0bfcffc2-b3ea-42aa-a748-f2271a112f67",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Keep receipts, trials, returns, warranties, and refund records together, with deadlines you review and confirm."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Receipt records and attachments"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Review suggested details from local receipt OCR"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Track returns, warranties, trials, and refunds"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Export deadlines to your calendar and records to CSV"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Appsurd",
+      "slug": "appsurd",
+      "folder": "apps",
+      "content": {
+        "_uid": "ee1d70c6-981a-41d9-bcf2-d9a363b04ba9",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "A pocket collection of small tools for timing, decisions, and the everyday tasks that deserve an easier way.",
+        "eyebrow": "For the oddly specific.",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/appsurd/illustration.svg",
+          "alt": "Abstract illustration for Appsurd",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "In testing. Features and availability may change before release.",
+        "body": [
+          {
+            "_uid": "c9bd8440-485a-4c89-824a-7ce1443fb55d",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A pocket collection of small tools for timing, decisions, and the everyday tasks that deserve an easier way."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Small tools for everyday decisions"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Timing and planning helpers"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Text and presentation utilities"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Private tools that run on your device"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CoreLink",
+      "slug": "corelink",
+      "folder": "apps",
+      "content": {
+        "_uid": "ddfaf565-ecde-4253-8cd4-a00617b750f8",
+        "component": "app_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "A keyboard-friendly collection of browser utilities for working with data, text, and the little jobs between bigger ideas.",
+        "eyebrow": "Your utility workbench.",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "/images/apps/corelink/illustration.svg",
+          "alt": "Abstract illustration for CoreLink",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "In testing. This page introduces the project; a public release link will be added when ready.",
+        "body": [
+          {
+            "_uid": "46e5fa03-d34f-4cab-b412-db7eb7d86e25",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A keyboard-friendly collection of browser utilities for working with data, text, and the little jobs between bigger ideas."
+                    }
+                  ]
+                },
+                {
+                  "type": "bullet_list",
+                  "content": [
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "A modular collection of utility tools"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Keyboard-first navigation"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "Work with JSON, regular expressions, and timestamps"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "list_item",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "A lightweight workbench without an account"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Blue Velocity",
+      "slug": "blue-velocity",
+      "folder": "games",
+      "content": {
+        "_uid": "f1093491-9f64-4c4e-beff-6a4b2de402f9",
+        "component": "bzy_game_page",
+        "display_on_site": true,
+        "status": "playable",
+        "short_description": "Take the long way through a living seascape. Thread wrecks, reefs, and ghost nets, then launch into the sun for a little extra style.",
+        "eyebrow": "Arcade run · open ocean",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "7bfb74e3-472b-4bf0-9195-dcffc28c6a0c",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Take the long way through a living seascape. Thread wrecks, reefs, and ghost nets, then launch into the sun for a little extra style."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Downhill Detour",
+      "slug": "downhill-detour",
+      "folder": "games",
+      "content": {
+        "_uid": "bf99262f-584c-4fb5-a94b-1931157f8af5",
+        "component": "bzy_game_page",
+        "display_on_site": true,
+        "status": "playable",
+        "short_description": "Pick a line, dodge the hazards, and keep the downhill detour moving through a living mountain course.",
+        "eyebrow": "Arcade run · snowy switchbacks",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "df237998-f6d2-4d3e-96ef-957686fb360b",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Pick a line, dodge the hazards, and keep the downhill detour moving through a living mountain course."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Neon Overdrive",
+      "slug": "neon-overdrive",
+      "folder": "games",
+      "content": {
+        "_uid": "9069fc0a-e179-4b49-980c-de290f924f05",
+        "component": "bzy_game_page",
+        "display_on_site": true,
+        "status": "playable",
+        "short_description": "Dodge traffic, grab gold, and ride the neon through a fast little arcade highway built for repeat runs.",
+        "eyebrow": "Arcade run · four-lane midnight",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "be53db87-256c-491a-a4f6-cddcf4376cf8",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Dodge traffic, grab gold, and ride the neon through a fast little arcade highway built for repeat runs."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ledge & Ladder",
+      "slug": "ledge-and-ladder",
+      "folder": "games",
+      "content": {
+        "_uid": "a45da24d-1447-41f4-9b76-265968cf124d",
+        "component": "bzy_game_page",
+        "display_on_site": true,
+        "status": "playable",
+        "short_description": "Work the rigging, drop four chests into the hold, and survive the ghosts, skeletons, and strange luck of a haunted voyage.",
+        "eyebrow": "Arcade survival · haunted ship",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "6e3ca7dd-7444-4f65-8665-16725e640a01",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Work the rigging, drop four chests into the hold, and survive the ghosts, skeletons, and strange luck of a haunted voyage."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gravity Shift",
+      "slug": "gravity-shift",
+      "folder": "games",
+      "content": {
+        "_uid": "e637d69d-311a-412f-8a74-6017e171f6ca",
+        "component": "bzy_game_page",
+        "display_on_site": true,
+        "status": "playable",
+        "short_description": "Rotate the whole grid, settle the pieces, and clear lines before the ceiling closes in on your next run.",
+        "eyebrow": "Puzzle arcade · turn the world",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "sea-glass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "6bb774e8-f519-43ec-a47f-48c6596e94ca",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Rotate the whole grid, settle the pieces, and clear lines before the ceiling closes in on your next run."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Low Tide Radio",
+      "slug": "low-tide-radio",
+      "folder": "projects",
+      "content": {
+        "_uid": "63b28d37-b0b8-4946-a24c-fee41644de32",
+        "component": "bzy_project_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "A growing collection of small sounds for late walks, open windows, and starting over.",
+        "eyebrow": "Music · slow signals",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "sea-glass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "22b10c8c-bdd4-4137-9959-f19e3676cb92",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A small listening room for late walks, open windows, and starting over. These first two pieces were made in Suno and are embedded from their public players."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Paper Weather",
+      "slug": "paper-weather",
+      "folder": "projects",
+      "content": {
+        "_uid": "06cff597-a6bd-4024-b597-7629fe8a40bb",
+        "component": "bzy_project_page",
+        "display_on_site": true,
+        "status": "in-development",
+        "short_description": "A set of tiny observations about weather, memory, and the shapes a day leaves behind.",
+        "eyebrow": "Project · visual notes",
+        "hero_image": {
+          "id": 0,
+          "fieldtype": "asset",
+          "filename": "",
+          "alt": "",
+          "title": ""
+        },
+        "app_store_url": {
+          "fieldtype": "multilink",
+          "linktype": "url",
+          "url": ""
+        },
+        "palette": "brass",
+        "notice": "",
+        "body": [
+          {
+            "_uid": "1ec766e7-2a86-482c-9b90-1ea11fe0f6b5",
+            "component": "rich_text",
+            "body": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "A set of tiny observations about weather, memory, and the shapes a day leaves behind."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,380 @@
+{
+  "components": [
+    {
+      "name": "app_page",
+      "display_name": "App page",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "display_on_site": {
+          "type": "boolean",
+          "display_name": "Show on website",
+          "default_value": true,
+          "description": "Turn off and publish to remove this page from the next build."
+        },
+        "status": {
+          "type": "option",
+          "display_name": "Release status",
+          "options": [
+            {
+              "name": "Available",
+              "value": "available"
+            },
+            {
+              "name": "In testing",
+              "value": "in-development"
+            },
+            {
+              "name": "Coming soon",
+              "value": "coming-soon"
+            },
+            {
+              "name": "Archived",
+              "value": "archived"
+            },
+            {
+              "name": "Playable",
+              "value": "playable"
+            }
+          ]
+        },
+        "short_description": {
+          "type": "textarea",
+          "display_name": "Short description",
+          "required": true
+        },
+        "hero_image": {
+          "type": "asset",
+          "display_name": "Product image",
+          "filetypes": [
+            "images"
+          ],
+          "description": "Add descriptive alternative text. Keep screenshots current."
+        },
+        "app_store_url": {
+          "type": "multilink",
+          "display_name": "App Store link",
+          "description": "Use the official https://apps.apple.com URL. Leave blank for testing apps."
+        },
+        "palette": {
+          "type": "option",
+          "display_name": "Accent palette",
+          "options": [
+            {
+              "name": "sea-glass",
+              "value": "sea-glass"
+            },
+            {
+              "name": "brass",
+              "value": "brass"
+            },
+            {
+              "name": "storm",
+              "value": "storm"
+            },
+            {
+              "name": "studio-sand",
+              "value": "studio-sand"
+            }
+          ]
+        },
+        "notice": {
+          "type": "textarea",
+          "display_name": "Useful product note"
+        },
+        "body": {
+          "type": "bloks",
+          "display_name": "Page content",
+          "restrict_components": true,
+          "component_whitelist": [
+            "rich_text",
+            "gallery",
+            "cta_button"
+          ]
+        }
+      }
+    },
+    {
+      "name": "rich_text",
+      "display_name": "Description & benefits",
+      "is_root": false,
+      "is_nestable": true,
+      "schema": {
+        "body": {
+          "type": "richtext",
+          "display_name": "Text and benefit bullets"
+        }
+      }
+    },
+    {
+      "name": "gallery",
+      "display_name": "Product screenshots",
+      "is_root": false,
+      "is_nestable": true,
+      "schema": {
+        "images": {
+          "type": "multiasset",
+          "display_name": "Screenshots",
+          "filetypes": [
+            "images"
+          ]
+        }
+      }
+    },
+    {
+      "name": "cta_button",
+      "display_name": "App Store button",
+      "is_root": false,
+      "is_nestable": true,
+      "schema": {
+        "link": {
+          "type": "multilink",
+          "display_name": "Official App Store URL"
+        }
+      }
+    },
+    {
+      "name": "bzy_studio_home",
+      "display_name": "Studio homepage",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "headline": {
+          "type": "text",
+          "display_name": "Headline, first line"
+        },
+        "second_line": {
+          "type": "text",
+          "display_name": "Headline, second line"
+        },
+        "description": {
+          "type": "textarea",
+          "display_name": "Introduction"
+        },
+        "featured_app": {
+          "type": "text",
+          "display_name": "Featured app slug",
+          "description": "Use an existing app slug, e.g. roametry. Hidden apps cannot be featured."
+        }
+      }
+    },
+    {
+      "name": "bzy_game_page",
+      "display_name": "Studio game page",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "display_on_site": {
+          "type": "boolean",
+          "display_name": "Show on website",
+          "default_value": true,
+          "description": "Turn off and publish to remove this page from the next build."
+        },
+        "status": {
+          "type": "option",
+          "display_name": "Release status",
+          "options": [
+            {
+              "name": "Available",
+              "value": "available"
+            },
+            {
+              "name": "In testing",
+              "value": "in-development"
+            },
+            {
+              "name": "Coming soon",
+              "value": "coming-soon"
+            },
+            {
+              "name": "Archived",
+              "value": "archived"
+            },
+            {
+              "name": "Playable",
+              "value": "playable"
+            }
+          ]
+        },
+        "short_description": {
+          "type": "textarea",
+          "display_name": "Short description",
+          "required": true
+        },
+        "hero_image": {
+          "type": "asset",
+          "display_name": "Product image",
+          "filetypes": [
+            "images"
+          ],
+          "description": "Add descriptive alternative text. Keep screenshots current."
+        },
+        "app_store_url": {
+          "type": "multilink",
+          "display_name": "App Store link",
+          "description": "Use the official https://apps.apple.com URL. Leave blank for testing apps."
+        },
+        "palette": {
+          "type": "option",
+          "display_name": "Accent palette",
+          "options": [
+            {
+              "name": "sea-glass",
+              "value": "sea-glass"
+            },
+            {
+              "name": "brass",
+              "value": "brass"
+            },
+            {
+              "name": "storm",
+              "value": "storm"
+            },
+            {
+              "name": "studio-sand",
+              "value": "studio-sand"
+            }
+          ]
+        },
+        "notice": {
+          "type": "textarea",
+          "display_name": "Useful product note"
+        },
+        "body": {
+          "type": "bloks",
+          "display_name": "Page content",
+          "restrict_components": true,
+          "component_whitelist": [
+            "rich_text",
+            "gallery",
+            "cta_button"
+          ]
+        },
+        "eyebrow": {
+          "type": "text",
+          "display_name": "Category label"
+        }
+      }
+    },
+    {
+      "name": "bzy_project_page",
+      "display_name": "Studio project page",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "display_on_site": {
+          "type": "boolean",
+          "display_name": "Show on website",
+          "default_value": true,
+          "description": "Turn off and publish to remove this page from the next build."
+        },
+        "status": {
+          "type": "option",
+          "display_name": "Release status",
+          "options": [
+            {
+              "name": "Available",
+              "value": "available"
+            },
+            {
+              "name": "In testing",
+              "value": "in-development"
+            },
+            {
+              "name": "Coming soon",
+              "value": "coming-soon"
+            },
+            {
+              "name": "Archived",
+              "value": "archived"
+            },
+            {
+              "name": "Playable",
+              "value": "playable"
+            }
+          ]
+        },
+        "short_description": {
+          "type": "textarea",
+          "display_name": "Short description",
+          "required": true
+        },
+        "hero_image": {
+          "type": "asset",
+          "display_name": "Product image",
+          "filetypes": [
+            "images"
+          ],
+          "description": "Add descriptive alternative text. Keep screenshots current."
+        },
+        "app_store_url": {
+          "type": "multilink",
+          "display_name": "App Store link",
+          "description": "Use the official https://apps.apple.com URL. Leave blank for testing apps."
+        },
+        "palette": {
+          "type": "option",
+          "display_name": "Accent palette",
+          "options": [
+            {
+              "name": "sea-glass",
+              "value": "sea-glass"
+            },
+            {
+              "name": "brass",
+              "value": "brass"
+            },
+            {
+              "name": "storm",
+              "value": "storm"
+            },
+            {
+              "name": "studio-sand",
+              "value": "studio-sand"
+            }
+          ]
+        },
+        "notice": {
+          "type": "textarea",
+          "display_name": "Useful product note"
+        },
+        "body": {
+          "type": "bloks",
+          "display_name": "Page content",
+          "restrict_components": true,
+          "component_whitelist": [
+            "rich_text",
+            "gallery",
+            "cta_button"
+          ]
+        },
+        "eyebrow": {
+          "type": "text",
+          "display_name": "Category label"
+        }
+      }
+    },
+    {
+      "name": "bzy_store_note",
+      "display_name": "Store note",
+      "is_root": true,
+      "is_nestable": false,
+      "schema": {
+        "display_on_site": {
+          "type": "boolean",
+          "display_name": "Show on website",
+          "default_value": true,
+          "description": "Turn off and publish to remove this page from the next build."
+        },
+        "description": {
+          "type": "textarea",
+          "display_name": "Description"
+        },
+        "timing": {
+          "type": "text",
+          "display_name": "Dates or timing"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+---
+interface HeroBlok {
+  _uid?: string;
+  headline?: string;
+  subheadline?: string;
+}
+
+interface Props {
+  blok?: HeroBlok;
+}
+
+const { blok = {} } = Astro.props;
+const headline = blok.headline || 'Collectively';
+const subheadline = blok.subheadline || 'by ZB';
+---
+
+<section
+  class="animated-hero"
+  data-animated-hero
+  data-storyblok-component="animated_hero"
+  data-storyblok-uid={blok._uid}
+  aria-labelledby="animated-hero-title"
+>
+  <div class="animated-hero__wash" aria-hidden="true"></div>
+
+  <svg class="animated-hero__trails" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="flight-path flight-path--left" data-flight-path="left" d="M 15 76 C 17 57, 32 65, 42 51 S 49 39, 50 33" />
+    <path class="flight-path flight-path--right" data-flight-path="right" d="M 85 76 C 83 57, 68 65, 58 51 S 51 39, 50 33" />
+  </svg>
+
+  <div class="flower flower--left" data-flower="left" aria-hidden="true">
+    <span class="stem"></span>
+    <span class="leaf leaf--one"></span>
+    <span class="leaf leaf--two"></span>
+    <span class="petal petal--one"></span>
+    <span class="petal petal--two"></span>
+    <span class="petal petal--three"></span>
+    <span class="petal petal--four"></span>
+    <span class="flower-core"></span>
+  </div>
+
+  <div class="flower flower--right" data-flower="right" aria-hidden="true">
+    <span class="stem"></span>
+    <span class="leaf leaf--one"></span>
+    <span class="leaf leaf--two"></span>
+    <span class="petal petal--one"></span>
+    <span class="petal petal--two"></span>
+    <span class="petal petal--three"></span>
+    <span class="petal petal--four"></span>
+    <span class="flower-core"></span>
+  </div>
+
+  <div class="bee bee--left" data-bee="left" aria-hidden="true">
+    <span class="thought-bulb" data-bulb="left">✦</span>
+    <svg viewBox="0 0 120 90" role="presentation">
+      <ellipse class="bee-wing bee-wing--back" cx="39" cy="24" rx="20" ry="12" transform="rotate(-28 39 24)" />
+      <ellipse class="bee-wing bee-wing--front" cx="66" cy="22" rx="20" ry="12" transform="rotate(18 66 22)" />
+      <ellipse class="bee-body" cx="60" cy="51" rx="34" ry="22" />
+      <path class="bee-stripe" d="M 47 31 Q 42 51 47 71" />
+      <path class="bee-stripe" d="M 62 29 Q 57 51 62 73" />
+      <circle class="bee-eye" cx="86" cy="47" r="4" />
+      <path class="bee-smile" d="M 85 56 Q 90 60 94 56" />
+      <path class="bee-stinger" d="M 27 50 L 14 44 L 25 61 Z" />
+      <path class="bee-antenna" d="M 83 35 Q 91 21 101 26" />
+    </svg>
+  </div>
+
+  <div class="bee bee--right" data-bee="right" aria-hidden="true">
+    <span class="thought-bulb" data-bulb="right">✦</span>
+    <svg viewBox="0 0 120 90" role="presentation">
+      <ellipse class="bee-wing bee-wing--back" cx="39" cy="24" rx="20" ry="12" transform="rotate(-28 39 24)" />
+      <ellipse class="bee-wing bee-wing--front" cx="66" cy="22" rx="20" ry="12" transform="rotate(18 66 22)" />
+      <ellipse class="bee-body" cx="60" cy="51" rx="34" ry="22" />
+      <path class="bee-stripe" d="M 47 31 Q 42 51 47 71" />
+      <path class="bee-stripe" d="M 62 29 Q 57 51 62 73" />
+      <circle class="bee-eye" cx="86" cy="47" r="4" />
+      <path class="bee-smile" d="M 85 56 Q 90 60 94 56" />
+      <path class="bee-stinger" d="M 27 50 L 14 44 L 25 61 Z" />
+      <path class="bee-antenna" d="M 83 35 Q 91 21 101 26" />
+    </svg>
+  </div>
+
+  <div class="animated-hero__center">
+    <div class="beehive" data-beehive aria-hidden="true">
+      <svg viewBox="0 0 120 120" role="presentation">
+        <path class="hive-shadow" d="M 24 87 Q 60 15 96 87 Z" />
+        <path class="hive-line" d="M 34 79 Q 60 30 86 79" />
+        <path class="hive-line" d="M 43 88 Q 60 53 77 88" />
+        <path class="hive-line" d="M 52 96 Q 60 76 68 96" />
+      </svg>
+    </div>
+    <p class="animated-hero__eyebrow">a small studio for bright ideas</p>
+    <h1 id="animated-hero-title" class="animated-hero__headline" data-headline>{headline}</h1>
+    <div class="animated-hero__subline" aria-live="polite">
+      <span class="subline-ghost" data-subline-ghost>BZY</span>
+      <span class="subline-final" data-subline-final>{subheadline}</span>
+    </div>
+    <p class="animated-hero__hint">apps · games · music · experiments</p>
+    <div class="animated-hero__actions">
+      <a class="animated-hero__action animated-hero__action--primary" href="/apps/">Explore the apps <span aria-hidden="true">↗</span></a>
+      <a class="animated-hero__action" href="/games/">Enter the play room <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+
+  <div class="animated-hero__caption" aria-hidden="true">made with curiosity <span>✦</span></div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const heroes = document.querySelectorAll<HTMLElement>('[data-animated-hero]');
+
+  heroes.forEach((hero) => {
+    const bees = Array.from(hero.querySelectorAll<HTMLElement>('[data-bee]'));
+    const bulbs = Array.from(hero.querySelectorAll<HTMLElement>('[data-bulb]'));
+    const paths = Array.from(hero.querySelectorAll<SVGPathElement>('[data-flight-path]'));
+    const hive = hero.querySelector<HTMLElement>('[data-beehive]');
+    const headline = hero.querySelector<HTMLElement>('[data-headline]');
+    const ghost = hero.querySelector<HTMLElement>('[data-subline-ghost]');
+    const finalLine = hero.querySelector<HTMLElement>('[data-subline-final]');
+    const wings = Array.from(hero.querySelectorAll<SVGElement>('.bee-wing'));
+    if (!hive || !headline || !ghost || !finalLine) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const finish = () => {
+      gsap.set(bees, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 });
+      gsap.set(bulbs, { opacity: 0, scale: 0.5 });
+      gsap.set(paths, { opacity: 0 });
+      gsap.set(hive, { opacity: 1, scale: 1 });
+      gsap.set(headline, { opacity: 1, y: 0 });
+      gsap.set(ghost, { opacity: 0 });
+      gsap.set(finalLine, { opacity: 1, y: 0 });
+    };
+
+    if (reduceMotion) {
+      finish();
+      return;
+    }
+
+    paths.forEach((path) => {
+      const length = path.getTotalLength();
+      gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+    });
+
+    gsap.set(bees, { opacity: 0, scale: 0.78 });
+    gsap.set(bulbs, { opacity: 0, scale: 0.5, transformOrigin: 'center bottom' });
+    gsap.set(hive, { opacity: 0, scale: 0.45, transformOrigin: 'center' });
+    gsap.set(headline, { opacity: 0, y: 24 });
+    gsap.set(ghost, { opacity: 0, y: 12 });
+    gsap.set(finalLine, { opacity: 0, y: 12 });
+
+    const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    timeline
+      .to(bees, { opacity: 1, scale: 1, duration: 0.55, stagger: 0.12 })
+      .to(bulbs, { opacity: 1, scale: 1, duration: 0.35, stagger: 0.12, ease: 'back.out(2)' }, '-=0.15')
+      .to(bulbs, { opacity: 0, scale: 1.45, duration: 0.35, stagger: 0.12 }, '+=0.35')
+      .to(paths, { opacity: 0.75, strokeDashoffset: 0, duration: 1.15, stagger: 0.08, ease: 'power1.inOut' }, '-=0.25')
+      .to(bees[0], { x: '29vw', y: '-29vh', rotation: 22, duration: 1.25, ease: 'power2.inOut' }, '<')
+      .to(bees[1], { x: '-29vw', y: '-29vh', rotation: -22, duration: 1.25, ease: 'power2.inOut' }, '<')
+      .to(bees, { x: 0, y: '-2vh', rotation: 360, duration: 0.85, ease: 'back.inOut(1.4)' })
+      .to(hive, { opacity: 1, scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.6)' }, '-=0.35')
+      .to(bees, { y: '13vh', rotation: 0, duration: 0.6, ease: 'power1.inOut' }, '+=0.15')
+      .to(bees, { y: '-2vh', rotation: 0, duration: 0.6, ease: 'power1.inOut' })
+      .to(headline, { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' }, '-=0.15')
+      .to(ghost, { opacity: 1, y: 0, duration: 0.6 }, '-=0.35')
+      .to(bees, { rotation: '+=12', x: 8, duration: 0.18, repeat: 3, yoyo: true, ease: 'sine.inOut' }, '+=0.15')
+      .to(ghost, { opacity: 0, y: -8, duration: 0.45 })
+      .to(finalLine, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.1')
+      .to(paths, { opacity: 0, duration: 0.55 }, '-=0.4');
+
+    gsap.to(bees, { y: '+=5', duration: 1.7, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 7.2 });
+    gsap.to(wings, { scaleY: 0.62, transformOrigin: 'center', duration: 0.16, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: 0.04, delay: 7.2 });
+  });
+</script>
+
+<style>
+  .animated-hero {
+    --hero-ink: #203536;
+    --hero-muted: #64807a;
+    --hero-cream: #fff8e9;
+    --hero-peach: #f8c39d;
+    --hero-coral: #ee856c;
+    --hero-amber: #edae3f;
+    --hero-sea: #a6d8ca;
+    position: relative;
+    min-height: min(780px, calc(100svh - 4rem));
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 3rem 1.25rem;
+    color: var(--hero-ink);
+    background: linear-gradient(135deg, #fff8e9 0%, #fff0dc 47%, #f8e7dc 100%);
+  }
+
+  .animated-hero__wash { position: absolute; inset: 0; z-index: -2; background: radial-gradient(circle at 50% 43%, #ffffffb8 0 9%, transparent 35%), radial-gradient(circle at 14% 14%, #fff8 0 5%, transparent 24%), radial-gradient(circle at 87% 25%, #f5c9a944 0 4%, transparent 20%); }
+  .animated-hero__trails { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+  .flight-path { fill: none; stroke: var(--hero-amber); stroke-width: .45; stroke-linecap: round; stroke-dasharray: 1.2 1.8; }
+
+  .animated-hero__center { position: relative; z-index: 4; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .beehive { width: clamp(5rem, 13vw, 8rem); height: clamp(5rem, 13vw, 8rem); margin-bottom: .4rem; }
+  .beehive svg { width: 100%; height: 100%; overflow: visible; }
+  .hive-shadow { fill: #eaae3f; stroke: #d18d26; stroke-width: 2; stroke-linejoin: round; }
+  .hive-line { fill: none; stroke: #fff3c9; stroke-width: 3; stroke-linecap: round; }
+  .animated-hero__eyebrow { margin: 0 0 .75rem; color: var(--hero-muted); font-size: .68rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+  .animated-hero__headline { margin: 0; color: var(--hero-ink); font-family: Georgia, 'Times New Roman', serif; font-size: clamp(3.7rem, 12vw, 8.8rem); font-weight: 500; letter-spacing: -.08em; line-height: .88; }
+  .animated-hero__subline { min-height: 2rem; margin-top: .75rem; color: #ba7622; font-family: 'Segoe Script', 'Snell Roundhand', cursive; font-size: clamp(1.55rem, 4vw, 2.5rem); font-weight: 600; letter-spacing: .05em; }
+  .subline-ghost, .subline-final { display: inline-block; }
+  .animated-hero__hint { margin: 1.4rem 0 0; color: var(--hero-muted); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+  .animated-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .65rem; margin-top: 1.8rem; }
+  .animated-hero__action { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.7rem; padding: .7rem 1rem; border: 1px solid #64807a55; border-radius: 999px; color: var(--hero-ink); font-size: .8rem; font-weight: 800; text-decoration: none; transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease; }
+  .animated-hero__action:hover, .animated-hero__action:focus-visible { border-color: var(--hero-ink); background: #ffffff88; transform: translateY(-2px); outline: none; }
+  .animated-hero__action--primary { border-color: var(--hero-amber); background: var(--hero-amber); }
+  .animated-hero__action--primary:hover, .animated-hero__action--primary:focus-visible { background: #f4c45d; }
+  .animated-hero__caption { position: absolute; right: 1.5rem; bottom: 1.3rem; color: #7c9690; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+  .animated-hero__caption span { color: var(--hero-coral); }
+
+  .flower { position: absolute; z-index: 2; bottom: -1.4rem; width: clamp(8rem, 17vw, 12rem); height: clamp(10rem, 22vw, 15rem); transform-origin: 50% 100%; }
+  .flower--left { left: clamp(-1.5rem, 5vw, 4rem); }
+  .flower--right { right: clamp(-1.5rem, 5vw, 4rem); transform: scaleX(-1); }
+  .stem { position: absolute; bottom: 0; left: 50%; width: .45rem; height: 75%; border-radius: 99px; background: linear-gradient(#9fc4a5, #648d73); transform: rotate(7deg); transform-origin: bottom; }
+  .leaf { position: absolute; bottom: 27%; left: 45%; width: 3.8rem; height: 1.6rem; border-radius: 100% 0 100% 0; background: var(--hero-sea); transform: rotate(20deg); }
+  .leaf--two { bottom: 42%; left: 19%; transform: rotate(155deg) scale(.8); background: #b6dfc4; }
+  .petal { position: absolute; top: 4%; left: 50%; width: 3.7rem; height: 5.8rem; border-radius: 70% 30% 70% 30%; background: var(--hero-coral); transform-origin: 50% 95%; box-shadow: 0 8px 20px #bd69532d; }
+  .petal--one { transform: translateX(-50%) rotate(0deg); }
+  .petal--two { transform: translateX(-50%) rotate(90deg); background: #f2a56d; }
+  .petal--three { transform: translateX(-50%) rotate(180deg); background: #e97d71; }
+  .petal--four { transform: translateX(-50%) rotate(270deg); background: #f4b276; }
+  .flower-core { position: absolute; top: 35%; left: 50%; width: 2.7rem; height: 2.7rem; border: .45rem solid #fff0bd; border-radius: 50%; background: var(--hero-amber); box-shadow: 0 0 0 .45rem #edac3e33; transform: translate(-50%, -50%); }
+
+  .bee { position: absolute; z-index: 5; width: clamp(4.7rem, 10vw, 6.3rem); height: auto; transform-origin: center; filter: drop-shadow(0 12px 10px #845d2930); }
+  .bee--left { bottom: 19%; left: 14%; }
+  .bee--right { right: 14%; bottom: 19%; transform: scaleX(-1); }
+  .bee svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .bee-body { fill: #f5be42; stroke: #8b6828; stroke-width: 2.5; }
+  .bee-stripe, .bee-antenna, .bee-smile { fill: none; stroke: #5b4a2c; stroke-linecap: round; stroke-width: 3; }
+  .bee-eye { fill: #3d3b2f; }
+  .bee-wing { fill: #ffffffa6; stroke: #8ab8b0; stroke-width: 1.5; }
+  .bee-stinger { fill: #8b6828; }
+  .thought-bulb { position: absolute; top: -1.8rem; left: 50%; color: var(--hero-amber); font-size: 1.25rem; transform: translateX(-50%); }
+
+  @media (max-width: 620px) {
+    .animated-hero { min-height: 620px; }
+    .flower { bottom: -.7rem; }
+    /* Keep the decorative bees below the actions on tall phone viewports. */
+    .bee { z-index: 3; width: clamp(4.2rem, 16vw, 5.2rem); }
+    .bee--left { left: 3%; bottom: 4%; }
+    .bee--right { right: 3%; bottom: 4%; }
+    .animated-hero__caption { right: 1rem; bottom: .8rem; font-size: .6rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animated-hero__trails { display: none; }
+    .bee { opacity: 1 !important; transform: none !important; }
+    .thought-bulb { display: none; }
+  }
+</style>

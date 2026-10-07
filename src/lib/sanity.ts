@@ -1,9 +1,10 @@
+import { env } from './environment';
 import { createClient } from '@sanity/client';
 import type { ContentCard } from '../data/content';
 import { apps as fallbackApps, games as fallbackGames, projects as fallbackProjects, specials as fallbackSpecials } from '../data/content';
 
-const projectId = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
-const dataset = import.meta.env.PUBLIC_SANITY_DATASET || 'production';
+const projectId = env.PUBLIC_SANITY_PROJECT_ID;
+const dataset = env.PUBLIC_SANITY_DATASET || 'production';
 
 const client = projectId
   ? createClient({ projectId, dataset, apiVersion: '2026-03-01', useCdn: false })

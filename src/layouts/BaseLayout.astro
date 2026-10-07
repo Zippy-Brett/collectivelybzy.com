@@ -1,4 +1,5 @@
 ---
+import { env } from '../lib/environment';
 import Navigation from '../components/Navigation.astro';
 import '../styles/global.css';
 
@@ -6,9 +7,12 @@ interface Props {
   title?: string;
   description?: string;
   theme?: 'studio' | 'play';
+  image?: string;
 }
 
-const { title = 'Collectively Bzy — apps, games, music, and bright little experiments', description = 'Collectively Bzy is a creative studio for thoughtful apps, playful games, music, and experiments.', theme = 'studio' } = Astro.props;
+const { title = 'Collectively Bzy — apps, games, music, and bright little experiments', description = 'Collectively Bzy is a creative studio for thoughtful apps, playful games, music, and experiments.', theme = 'studio', image = '/images/collectively-bzy-bee.png' } = Astro.props;
+const preview = env.SITE_INDEXABLE === 'false' || Astro.url.pathname.startsWith('/splash-preview');
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://collectivelybzy.com').toString();
 ---
 
 <!doctype html>
@@ -16,9 +20,30 @@ const { title = 'Collectively Bzy — apps, games, music, and bright little expe
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content={preview ? 'noindex, nofollow' : 'index, follow'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={new URL(image, Astro.site ?? 'https://collectivelybzy.com').toString()} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="description" content={description} />
     <meta name="theme-color" content={theme === 'play' ? '#17242a' : '#082c3a'} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={new URL(image, Astro.site ?? 'https://collectivelybzy.com').toString()} />
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@type': 'Organization', name: 'Collectively Bzy', url: 'https://collectivelybzy.com', logo: 'https://collectivelybzy.com/images/collectively-bzy-bee.png' }).replace(/</g, '\u003c')} />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <!-- MailerLite Universal -->
+    <script is:inline>
+      (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+      .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+      n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
+      (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+      ml('account', '2677501');
+    </script>
+    <!-- End MailerLite Universal -->
     <title>{title}</title>
   </head>
   <body>
@@ -31,7 +56,7 @@ const { title = 'Collectively Bzy — apps, games, music, and bright little expe
       <footer class="site-footer">
         <div class="container footer-wrap">
           <p>© {new Date().getFullYear()} Collectively Bzy.</p>
-          <p>Thoughtful tools, playful detours, and room to make.</p>
+          <p>Thoughtful tools, playful detours, and room to make. <a href="/support/">Support</a> · <a href="mailto:hello@collectivelybzy.com">Contact</a></p>
         </div>
       </footer>
     </div>
