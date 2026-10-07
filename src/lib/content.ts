@@ -1,3 +1,4 @@
+import { env } from './environment';
 import { getApps as getSanityApps, getGames as getLegacyGames, getProjects as getLegacyProjects, getSpecials as getLegacySpecials } from './sanity';
 import { getStoryblokAppCollection, toApp } from './storyblok-content';
 import { storyblokConfigured, getStoryblokStories, getStoryblokStory } from './storyblok';
@@ -14,7 +15,7 @@ export async function getApps() {
   const storyblok = await getStoryblokAppCollection();
   // Once connected, published Storyblok stories are authoritative. Unpublished
   // or hidden records must never reappear through a local fallback.
-  if (storyblokConfigured && import.meta.env.STORYBLOK_MIGRATION_MODE !== 'merge') return storyblok.visible;
+  if (storyblokConfigured && env.STORYBLOK_MIGRATION_MODE !== 'merge') return storyblok.visible;
   const existingApps = await getSanityApps();
   const merged = new Map(existingApps.map((item) => [item.slug, item]));
 

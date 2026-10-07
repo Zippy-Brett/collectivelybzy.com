@@ -1,4 +1,5 @@
 ---
+import { env } from '../lib/environment';
 import Navigation from '../components/Navigation.astro';
 import '../styles/global.css';
 
@@ -10,7 +11,7 @@ interface Props {
 }
 
 const { title = 'Collectively Bzy — apps, games, music, and bright little experiments', description = 'Collectively Bzy is a creative studio for thoughtful apps, playful games, music, and experiments.', theme = 'studio', image = '/images/collectively-bzy-bee.png' } = Astro.props;
-const preview = import.meta.env.SITE_INDEXABLE === 'false' || Astro.url.pathname.startsWith('/splash-preview');
+const preview = env.SITE_INDEXABLE === 'false' || Astro.url.pathname.startsWith('/splash-preview');
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://collectivelybzy.com').toString();
 ---
 

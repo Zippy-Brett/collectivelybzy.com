@@ -1,3 +1,4 @@
+import { env } from './environment';
 /**
  * Minimal Storyblok Content Delivery API client.
  *
@@ -35,20 +36,20 @@ export type StoryblokBlock = {
   [key: string]: unknown;
 };
 
-const spaceId = import.meta.env.STORYBLOK_SPACE_ID || '295535334209633';
-const apiBaseUrl = (import.meta.env.STORYBLOK_API_BASE_URL || 'https://api.storyblok.com').replace(/\/$/, '');
-const requestedVersion = import.meta.env.STORYBLOK_VERSION;
+const spaceId = env.STORYBLOK_SPACE_ID || '295535334209633';
+const apiBaseUrl = (env.STORYBLOK_API_BASE_URL || 'https://api.storyblok.com').replace(/\/$/, '');
+const requestedVersion = env.STORYBLOK_VERSION;
 const version: StoryblokVersion = requestedVersion === 'draft' ? 'draft' : 'published';
 
 export const storyblokSpaceId = spaceId;
-const token = version === 'draft' ? import.meta.env.STORYBLOK_PREVIEW_TOKEN : import.meta.env.STORYBLOK_PUBLIC_TOKEN;
-if (version === 'draft' && import.meta.env.STORYBLOK_PREVIEW_BUILD !== 'true') {
+const token = version === 'draft' ? env.STORYBLOK_PREVIEW_TOKEN : env.STORYBLOK_PUBLIC_TOKEN;
+if (version === 'draft' && env.STORYBLOK_PREVIEW_BUILD !== 'true') {
   throw new Error('Draft content requires STORYBLOK_PREVIEW_BUILD=true and SITE_INDEXABLE=false.');
 }
-if (version === 'draft' && import.meta.env.SITE_INDEXABLE !== 'false') {
+if (version === 'draft' && env.SITE_INDEXABLE !== 'false') {
   throw new Error('Draft builds must use SITE_INDEXABLE=false.');
 }
-if ((import.meta.env.STORYBLOK_PUBLIC_TOKEN || import.meta.env.STORYBLOK_PREVIEW_TOKEN) && !token) {
+if ((env.STORYBLOK_PUBLIC_TOKEN || env.STORYBLOK_PREVIEW_TOKEN) && !token) {
   throw new Error('The delivery token for the selected Storyblok version is missing.');
 }
 export const storyblokConfigured = Boolean(token);
