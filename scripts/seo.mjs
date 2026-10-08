@@ -11,4 +11,4 @@ console.log(`Sitemap: ${urls.length} public pages`);
 
 const release = /^[a-f0-9]{7,40}$/i.test(process.env.CF_PAGES_COMMIT_SHA || '') ? process.env.CF_PAGES_COMMIT_SHA.slice(0,12) : 'local';
 const preview = process.env.SITE_INDEXABLE === 'false';
-await writeFile(join(root,'_headers'), `/*\n  X-Site-Release: ${release}\n${preview ? '  X-Robots-Tag: noindex, nofollow\n' : ''}/_astro/*\n  Cache-Control: public, max-age=31536000, immutable\n/images/*\n  Cache-Control: public, max-age=3600, must-revalidate\n/splash-preview/*\n  X-Robots-Tag: noindex, nofollow\n`);
+await writeFile(join(root,'_headers'), `/*\n  X-Site-Release: ${release}\n  Strict-Transport-Security: max-age=2592000\n${preview ? '  X-Robots-Tag: noindex, nofollow\n' : ''}/_astro/*\n  Cache-Control: public, max-age=31536000, immutable\n/images/*\n  Cache-Control: public, max-age=3600, must-revalidate\n/splash-preview/*\n  X-Robots-Tag: noindex, nofollow\n`);
