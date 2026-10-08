@@ -7,8 +7,8 @@ Space: `295535334209633`. The space contains 17 published stories: the studio ho
 1. Open Content → Apps → the app name.
 2. Change the short description, product note, screenshots, or the description and benefit bullets under Page content. Use descriptive image alt text. Use the story name as the public app title.
 3. Choose **Available** only for a released app and enter its official App Store link. Testing apps use **In testing** and leave that link blank. Five apps are currently released: Roametry, Back The Pack, Scroll in Peace, Hold My Place, and Sensory Seek. Four are in testing: What's That Hue?, Lifetility, Appsurd, and CoreLink.
-4. Save your draft. Review in the separate draft build. Ask the publishing owner to publish when ready.
-5. Published content appears after a successful Cloudflare rebuild. Saving or publishing in Storyblok alone does not change this static site until the build runs.
+4. Save your draft and ask the publishing owner to review it before publishing. A protected draft preview has not been configured.
+5. Publishing automatically triggers the Cloudflare Git rebuild. Published content appears after that deployment succeeds; saving a draft does not update the public site.
 
 To hide a page, turn off **Show on website**, publish that change, and rebuild. This removes its card and generated page. Do not rename a slug for a title correction; changing a slug changes the public URL and needs a redirect.
 
